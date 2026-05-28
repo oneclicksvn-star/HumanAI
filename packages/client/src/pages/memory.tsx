@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { cn, timeAgo, MOOD_COLORS } from "@/lib/utils";
 import { useMemories, useKnowledgeGraph, useSkills, useDreams, useAgents } from "@/hooks/useApi";
-import { Brain, Network, Zap, Moon, Search, RefreshCw, TrendingDown, Sparkles } from "lucide-react";
+import { Brain, Network, Zap, Moon, Search, RefreshCw, TrendingDown, Sparkles, RotateCcw, Trash2 } from "lucide-react";
+import { request } from "@/lib/api";
 
 const TABS = [
   { id: "timeline", label: "Timeline", icon: Brain },
@@ -66,6 +67,20 @@ export default function Memory() {
       setSearchResults(data.results);
     } catch { setSearchResults([]); }
     setSearching(false);
+  };
+
+  const handleRecall = async (memoryId: number) => {
+    try {
+      await request(`/memory/${memoryId}/recall`, { method: "POST" });
+      refetchMemories();
+    } catch { /* ignore */ }
+  };
+
+  const handleDeleteMemory = async (memoryId: number) => {
+    try {
+      await request(`/memory/${memoryId}`, { method: "DELETE" });
+      refetchMemories();
+    } catch { /* ignore */ }
   };
 
   const handleConsolidate = async (type: string = "full") => {
@@ -141,7 +156,17 @@ export default function Memory() {
                   </div>
                 </div>
                 <p className="text-[11px] text-gray-600 mb-2">{m.summary}</p>
-                <div className="flex gap-1.5">{(m.tags ?? []).map(t => <span key={t} className="text-[9px] text-indigo-500 font-semibold">{t}</span>)}</div>
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1.5">{(m.tags ?? []).map(t => <span key={t} className="text-[9px] text-indigo-500 font-semibold">{t}</span>)}</div>
+                  <div className="flex gap-1">
+                    <button onClick={() => handleRecall(m.id)} className="text-[9px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center gap-1" title="Recall (boost importance +10%)">
+                      <RotateCcw size={9} /> Recall
+                    </button>
+                    <button onClick={() => handleDeleteMemory(m.id)} className="text-[9px] px-2 py-0.5 rounded bg-red-50 text-red-400 hover:bg-red-100 flex items-center gap-1" title="Delete">
+                      <Trash2 size={9} />
+                    </button>
+                  </div>
+                </div>
               </div>
             );
           })}

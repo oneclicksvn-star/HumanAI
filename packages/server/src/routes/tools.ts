@@ -78,4 +78,12 @@ export const toolsRoutes = new Hono()
     const ok = rejectToolCall(id);
     if (!ok) return c.json({ error: "Approval not found" }, 404);
     return c.json({ rejected: true });
+  })
+
+  // Toggle tool approval requirement
+  .post("/tools/:id/approve", async (c) => {
+    const id = Number(c.req.param("id"));
+    const [row] = await db.update(tools).set({ requiresApproval: false }).where(eq(tools.id, id)).returning();
+    if (!row) return c.json({ error: "Tool not found" }, 404);
+    return c.json({ approved: true, tool: row });
   });

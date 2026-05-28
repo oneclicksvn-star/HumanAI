@@ -393,3 +393,52 @@ providersRoutes.delete("/providers/:id", async (c) => {
   await db.delete(providers).where(eq(providers.id, id));
   return c.body(null, 204);
 });
+
+// Test provider connection
+providersRoutes.post("/providers/:id/test", async (c) => {
+  const id = Number(c.req.param("id"));
+  const [provider] = await db.select().from(providers).where(eq(providers.id, id));
+  if (!provider) return c.json({ ok: false, error: "Provider not found" }, 404);
+  if (!provider.apiKey) return c.json({ ok: false, error: "No API key configured" });
+
+  try {
+    const baseUrl = provider.baseUrl || getDefaultBaseUrl(provider.type);
+    const testUrl = getTestEndpoint(provider.type, baseUrl);
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+    if (provider.type === "anthropic") {
+      headers["x-api-key"] = provider.apiKey;
+      headers["anthropic-version"] = "2023-06-01";
+    } else if (provider.type !== "ollama") {
+      headers["Authorization"] = `Bearer ${provider.apiKey}`;
+    }
+
+    const res = await fetch(testUrl, { headers, signal: AbortSignal.timeout(10000) });
+    return c.json({ ok: res.ok, status: res.status, provider: provider.type });
+  } catch (e: any) {
+    return c.json({ ok: false, error: e.message ?? "Connection failed" });
+  }
+});
+
+function getDefaultBaseUrl(type: string): string {
+  const urls: Record<string, string> = {
+    anthropic: "https://api.anthropic.com",
+    openai: "https://api.openai.com",
+    google: "https://generativelanguage.googleapis.com",
+    ollama: "http://localhost:11434",
+    deepseek: "https://api.deepseek.com",
+    groq: "https://api.groq.com",
+    openrouter: "https://openrouter.ai",
+    together: "https://api.together.xyz",
+    mistral: "https://api.mistral.ai",
+    xai: "https://api.x.ai",
+  };
+  return urls[type] ?? "http://localhost:11434";
+}
+
+function getTestEndpoint(type: string, baseUrl: string): string {
+  if (type === "anthropic") return `${baseUrl}/v1/models`;
+  if (type === "google") return `${baseUrl}/v1beta/models`;
+  if (type === "ollama") return `${baseUrl}/api/tags`;
+  return `${baseUrl}/v1/models`;
+}

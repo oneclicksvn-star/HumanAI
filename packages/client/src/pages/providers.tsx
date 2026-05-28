@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useProviders, useCreateProvider, useUpdateProvider } from "@/hooks/useApi";
-import { Plus, Check, X, Settings2, Key, Power, Zap } from "lucide-react";
+import { Plus, Check, X, Settings2, Key, Power, Zap, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { request } from "@/lib/api";
 
 const PROVIDER_TYPES = [
   { type: "anthropic", name: "Anthropic", color: "#d4a574", models: ["claude-sonnet-4-20250514", "claude-3.5-haiku-20241022", "claude-3-opus-20240229"] },
@@ -50,6 +51,21 @@ export default function Providers() {
       }
     }
     updateProvider.mutate({ id, isActive: true } as Record<string, unknown> & { id: number });
+  };
+
+  const [testing, setTesting] = useState<number | null>(null);
+  const [testResult, setTestResult] = useState<Record<number, "ok" | "fail">>({});
+
+  const handleTestConnection = async (id: number) => {
+    setTesting(id);
+    setTestResult(prev => { const n = { ...prev }; delete n[id]; return n; });
+    try {
+      const res = await request(`/providers/${id}/test`, { method: "POST" });
+      setTestResult(prev => ({ ...prev, [id]: (res as any)?.ok ? "ok" : "fail" }));
+    } catch {
+      setTestResult(prev => ({ ...prev, [id]: "fail" }));
+    }
+    setTesting(null);
   };
 
   const configuredCount = (providers ?? []).filter(p => p.apiKey && p.apiKey !== "Not set" && p.apiKey !== "••••").length;
@@ -183,13 +199,22 @@ export default function Providers() {
                   {(p.models ?? []).map(m => <span key={m} className="text-[9px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{m}</span>)}
                 </div>
 
-                {/* Set as default button */}
-                {hasKey && !p.isActive && (
-                  <button onClick={() => handleSetAsDefault(p.id)}
-                    className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 mt-1">
-                    <Power size={10} /> Set as active provider
-                  </button>
-                )}
+                {/* Actions */}
+                <div className="flex items-center gap-2 mt-1">
+                  {hasKey && (
+                    <button onClick={() => handleTestConnection(p.id)} disabled={testing === p.id}
+                      className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 disabled:opacity-50">
+                      {testing === p.id ? <Loader2 size={10} className="animate-spin" /> : testResult[p.id] === "ok" ? <CheckCircle2 size={10} /> : testResult[p.id] === "fail" ? <XCircle size={10} className="text-red-500" /> : <Zap size={10} />}
+                      {testing === p.id ? "Testing..." : testResult[p.id] === "ok" ? "Connected" : testResult[p.id] === "fail" ? "Failed" : "Test Connection"}
+                    </button>
+                  )}
+                  {hasKey && !p.isActive && (
+                    <button onClick={() => handleSetAsDefault(p.id)}
+                      className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-600 hover:text-indigo-700">
+                      <Power size={10} /> Set as active
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
