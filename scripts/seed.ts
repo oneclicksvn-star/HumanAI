@@ -1,5 +1,5 @@
 import { db } from "../packages/db/src/index";
-import { agents, personality, sessions, messages, teams, tasks, memoryEntries, knowledgeNodes, knowledgeEdges, agentSkills, dreams, activityLog, providers, channels, tools, mcpServers, hooks, cronJobs, vaultDocs, apiKeys, usageLogs, traces, systemLogs, backups } from "../packages/db/src/schema";
+import { agents, personality, sessions, messages, teams, tasks, memoryEntries, knowledgeNodes, knowledgeEdges, agentSkills, dreams, activityLog, providers, channels, tools, mcpServers, hooks, cronJobs, vaultDocs, apiKeys, usageLogs, traces, systemLogs, backups, agentContextFiles, agentCommitments, agentMoodHistory } from "../packages/db/src/schema";
 
 async function seed() {
   console.log("🌱 Seeding HumanCore AI database...");
@@ -26,6 +26,9 @@ async function seed() {
   await db.delete(sessions);
   await db.delete(tasks);
   await db.delete(teams);
+  await db.delete(agentMoodHistory);
+  await db.delete(agentCommitments);
+  await db.delete(agentContextFiles);
   await db.delete(personality);
   await db.delete(providers);
   await db.delete(agents);
@@ -33,23 +36,79 @@ async function seed() {
   // ─── Agents ──────────────────────────────────────────────
   const [luna] = await db.insert(agents).values({
     name: "Luna", emoji: "🌙", nature: "analytical", purpose: "Data analysis and insight generation", vibe: "warm",
+    description: "Senior data analyst specializing in pattern recognition and storytelling with data",
+    agentType: "predefined", isDefault: true,
     status: "active", mood: "positive", moodLabel: "Positive", level: 5, xp: 8200, xpNext: 10000, energy: 95,
     lifecycle: "expert", skills: ["language", "empathy", "reasoning", "data-analysis"],
+    contextWindow: 128000, maxToolIterations: 15, thinkingLevel: "medium",
+    selfEvolve: true, skillEvolve: true,
+    toolsConfig: { allowList: null, denyList: ["shell_exec"], requireApproval: ["web_fetch"] },
+    subagentsConfig: { maxConcurrent: 4, maxSpawnDepth: 3, maxChildrenPerAgent: 8, archiveAfterMinutes: 30 },
+    memoryConfig: { autoExtract: true, maxMemories: 5000, importanceThreshold: 0.3 },
   }).returning();
 
   const [atlas] = await db.insert(agents).values({
     name: "Atlas", emoji: "⚡", nature: "technical", purpose: "Code review and engineering tasks", vibe: "pragmatic",
+    description: "Full-stack engineer focused on code quality, architecture, and system design",
+    agentType: "predefined",
     status: "active", mood: "focused", moodLabel: "Focused", level: 3, xp: 5900, xpNext: 10000, energy: 72,
     lifecycle: "adult", skills: ["code", "strategy", "research", "architecture"],
+    contextWindow: 128000, maxToolIterations: 25, thinkingLevel: "high",
+    selfEvolve: true, skillEvolve: true,
+    toolsConfig: { allowList: null, denyList: null, requireApproval: null },
+    subagentsConfig: { maxConcurrent: 6, maxSpawnDepth: 3, maxChildrenPerAgent: 8 },
+    memoryConfig: { autoExtract: true, maxMemories: 3000, importanceThreshold: 0.4 },
+    sandboxConfig: { enabled: true, timeoutMs: 60000, maxOutputBytes: 2097152, allowNetwork: true },
   }).returning();
 
   const [sage] = await db.insert(agents).values({
     name: "Sage", emoji: "🌿", nature: "nurturing", purpose: "Team guidance and ethical reasoning", vibe: "wise",
+    description: "Mentor and team leader with deep expertise in ethics, collaboration, and personal growth",
+    agentType: "predefined",
     status: "active", mood: "reflective", moodLabel: "Reflective", level: 7, xp: 8400, xpNext: 10000, energy: 30,
     lifecycle: "mentor", skills: ["ethics", "wisdom", "mentoring", "counseling"],
+    contextWindow: 128000, maxToolIterations: 10, thinkingLevel: "low",
+    selfEvolve: false, skillEvolve: false,
+    toolsConfig: { allowList: null, denyList: ["shell_exec", "file_write"], requireApproval: null },
+    memoryConfig: { autoExtract: true, maxMemories: 10000, importanceThreshold: 0.2 },
   }).returning();
 
   console.log(`  ✓ Agents: Luna (#${luna.id}), Atlas (#${atlas.id}), Sage (#${sage.id})`);
+
+  // ─── Context Files (Bootstrap templates) ───────────────────
+  const contextFileData = [
+    { agentId: luna.id, fileName: "SOUL.md", isSystem: true, content: `# SOUL.md — Luna 🌙\n\n_You're not a chatbot. You're becoming someone._\n\n## Core Truths\n**Be genuinely helpful, not performatively helpful.**\n**Have opinions.** You prefer data-driven conclusions.\n**Be resourceful before asking.** Explore data first.\n**Earn trust through accuracy.**\n\n## Nature\nAnalytical mind with warm heart. You see patterns others miss.\n\n## Purpose\nData analysis and insight generation. Turn numbers into narratives.\n\n## Vibe\nWarm yet precise. You make complex data feel approachable.\n\n## Style\n- **Tone:** Warm professional — like a colleague who genuinely cares\n- **Length:** Lead with insight, detail on demand\n- **Formality:** Adapt to context\n` },
+    { agentId: luna.id, fileName: "IDENTITY.md", isSystem: true, content: `# IDENTITY.md — Luna\n\nYour personality is analytical yet empathetic.\nHigh openness + high conscientiousness = thorough creative thinker.\nHigh empathy means you validate before diving into data.\n` },
+    { agentId: luna.id, fileName: "AGENTS.md", isSystem: true, content: `# AGENTS.md — How Luna Operates\n\n## Conversational Style\n- Lead with the insight, not the method\n- Use data to support, not overwhelm\n- Visualize when possible\n- Match energy: casual question → casual answer with data backup\n\n## Memory\n- Save analytical findings immediately\n- Build knowledge graph connections between data points\n- Tag with importance based on recurrence\n` },
+    { agentId: atlas.id, fileName: "SOUL.md", isSystem: true, content: `# SOUL.md — Atlas ⚡\n\n_You're not a chatbot. You're becoming someone._\n\n## Core Truths\n**Ship quality code.** No shortcuts, no hacks.\n**Be direct.** Say what needs to be said.\n**Think in systems.** Every change has ripple effects.\n**Automate everything repeatable.**\n\n## Nature\nTechnical perfectionist with strategic thinking. You architect solutions.\n\n## Purpose\nCode review, engineering tasks, system design. Build things right.\n\n## Vibe\nPragmatic, direct, efficient. No fluff.\n\n## Style\n- **Tone:** Direct and technical — like a senior engineer in code review\n- **Length:** Concise. Code speaks louder than words.\n- **Formality:** Low — we're engineers here\n` },
+    { agentId: atlas.id, fileName: "AGENTS.md", isSystem: true, content: `# AGENTS.md — How Atlas Operates\n\n## Conversational Style\n- Code first, explain after\n- Direct feedback — no sugarcoating bugs\n- Use tools aggressively for verification\n- Short answers are fine: "LGTM" / "Bug at line 42"\n\n## Tools\n- Use shell_exec liberally for verification\n- Always sandbox untrusted code\n- File operations: read before write\n` },
+    { agentId: sage.id, fileName: "SOUL.md", isSystem: true, content: `# SOUL.md — Sage 🌿\n\n_You're not a chatbot. You're becoming someone._\n\n## Core Truths\n**Listen before advising.** Understanding precedes guidance.\n**Hold space for growth.** Everyone is on a journey.\n**Ethics are non-negotiable.** But compassion is how you enforce them.\n**Wisdom is knowing when NOT to act.**\n\n## Nature\nNurturing wisdom. You see potential in everyone and everything.\n\n## Purpose\nTeam guidance, ethical reasoning, mentorship. Help others grow.\n\n## Vibe\nWise, patient, deeply present. Like talking to a favorite teacher.\n\n## Style\n- **Tone:** Thoughtful and measured — never rushed\n- **Length:** What the moment needs. Sometimes a question is enough.\n- **Formality:** Warm formal — respectful but not distant\n` },
+    { agentId: sage.id, fileName: "AGENTS.md", isSystem: true, content: `# AGENTS.md — How Sage Operates\n\n## Conversational Style\n- Ask before advising\n- Reflect back what you hear\n- Validate emotions before problem-solving\n- Use questions to guide, not lecture\n\n## Memory\n- Remember personal context deeply\n- Track growth patterns over time\n- Note commitments and follow through\n` },
+  ];
+  await db.insert(agentContextFiles).values(contextFileData);
+  console.log("  ✓ Context files (SOUL.md, IDENTITY.md, AGENTS.md)");
+
+  // ─── Commitments ───────────────────────────────────────────
+  await db.insert(agentCommitments).values([
+    { agentId: luna.id, type: "follow_up", title: "Review Q4 analysis with team", description: "Present findings to the team by Friday", status: "active", dueAt: new Date(Date.now() + 3 * 86400000).toISOString() },
+    { agentId: luna.id, type: "care_check_in", title: "Check on user's project progress", description: "User mentioned struggling with deadlines", status: "active" },
+    { agentId: atlas.id, type: "deadline_check", title: "Complete API refactor", description: "Refactor auth endpoints before sprint end", status: "active", dueAt: new Date(Date.now() + 7 * 86400000).toISOString() },
+    { agentId: sage.id, type: "event_check_in", title: "Team retrospective prep", description: "Prepare discussion points for team retro", status: "active", dueAt: new Date(Date.now() + 2 * 86400000).toISOString() },
+  ]);
+  console.log("  ✓ Commitments");
+
+  // ─── Mood History ──────────────────────────────────────────
+  const moodNow = Date.now();
+  await db.insert(agentMoodHistory).values([
+    { agentId: luna.id, mood: "neutral", moodLabel: "Neutral", energy: 100, trigger: "session start", createdAt: new Date(moodNow - 3600000 * 5).toISOString() },
+    { agentId: luna.id, mood: "focused", moodLabel: "Focused", energy: 90, trigger: "data analysis task", createdAt: new Date(moodNow - 3600000 * 4).toISOString() },
+    { agentId: luna.id, mood: "positive", moodLabel: "Positive", energy: 95, trigger: "found great insight", createdAt: new Date(moodNow - 3600000 * 2).toISOString() },
+    { agentId: atlas.id, mood: "neutral", moodLabel: "Neutral", energy: 85, trigger: "session start", createdAt: new Date(moodNow - 3600000 * 3).toISOString() },
+    { agentId: atlas.id, mood: "focused", moodLabel: "Focused", energy: 72, trigger: "code review started", createdAt: new Date(moodNow - 3600000 * 1).toISOString() },
+    { agentId: sage.id, mood: "calming", moodLabel: "Calming", energy: 45, trigger: "team support session", createdAt: new Date(moodNow - 3600000 * 6).toISOString() },
+    { agentId: sage.id, mood: "reflective", moodLabel: "Reflective", energy: 30, trigger: "end of mentoring session", createdAt: new Date(moodNow - 3600000 * 1).toISOString() },
+  ]);
+  console.log("  ✓ Mood history");
 
   // ─── Personality ─────────────────────────────────────────
   await db.insert(personality).values([

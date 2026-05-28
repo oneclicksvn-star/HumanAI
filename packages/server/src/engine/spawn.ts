@@ -1,9 +1,12 @@
 import { db } from "@humancore/db";
 import { agents, personality, sessions, subAgentSpawns, agentLinks, activityLog } from "@humancore/db/schema";
+import type { AgentSubagentsConfig } from "@humancore/db/schema";
 import { eq } from "drizzle-orm";
 
-const MAX_SPAWN_DEPTH = 3;
-const MAX_CHILDREN_PER_AGENT = 8;
+// Defaults (matching GoClaw spec)
+const DEFAULT_MAX_SPAWN_DEPTH = 3;
+const DEFAULT_MAX_CHILDREN_PER_AGENT = 8;
+const DEFAULT_MAX_CONCURRENT = 4;
 
 export interface SpawnOptions {
   parentAgentId: number;
@@ -13,44 +16,65 @@ export interface SpawnOptions {
   name?: string;
   emoji?: string;
   skills?: string[];
+  model?: string; // override model for sub-agent
+}
+
+function resolveSubagentConfig(agentConfig: AgentSubagentsConfig | null): Required<AgentSubagentsConfig> {
+  return {
+    maxConcurrent: agentConfig?.maxConcurrent ?? DEFAULT_MAX_CONCURRENT,
+    maxSpawnDepth: agentConfig?.maxSpawnDepth ?? DEFAULT_MAX_SPAWN_DEPTH,
+    maxChildrenPerAgent: agentConfig?.maxChildrenPerAgent ?? DEFAULT_MAX_CHILDREN_PER_AGENT,
+    archiveAfterMinutes: agentConfig?.archiveAfterMinutes ?? 30,
+    model: agentConfig?.model ?? "",
+  };
 }
 
 export async function spawnSubAgent(opts: SpawnOptions) {
   const [parent] = await db.select().from(agents).where(eq(agents.id, opts.parentAgentId));
   if (!parent) throw new Error("Parent agent not found");
 
-  // Check spawn depth
+  // Resolve per-agent subagent config
+  const config = resolveSubagentConfig(parent.subagentsConfig as AgentSubagentsConfig | null);
+
+  // Check active children count
   const existingSpawns = await db.select().from(subAgentSpawns)
     .where(eq(subAgentSpawns.parentAgentId, opts.parentAgentId));
   const activeSpawns = existingSpawns.filter(s => s.status === "active");
 
-  if (activeSpawns.length >= MAX_CHILDREN_PER_AGENT) {
-    throw new Error(`Max children reached (${MAX_CHILDREN_PER_AGENT})`);
+  if (activeSpawns.length >= config.maxChildrenPerAgent) {
+    throw new Error(`Max children reached (${config.maxChildrenPerAgent})`);
   }
 
   // Check depth limit
   const parentSpawn = await db.select().from(subAgentSpawns)
     .where(eq(subAgentSpawns.childAgentId, opts.parentAgentId));
   const currentDepth = parentSpawn[0]?.depth ?? 0;
-  if (currentDepth + 1 > MAX_SPAWN_DEPTH) {
-    throw new Error(`Max spawn depth reached (${MAX_SPAWN_DEPTH})`);
+  if (currentDepth + 1 > config.maxSpawnDepth) {
+    throw new Error(`Max spawn depth reached (${config.maxSpawnDepth})`);
   }
 
   // Create child agent
   const childName = opts.name ?? `${parent.name}-sub-${activeSpawns.length + 1}`;
+  const childModel = opts.model ?? config.model ?? parent.model;
   const [child] = await db.insert(agents).values({
     name: childName,
     emoji: opts.emoji ?? "🔧",
     nature: `Sub-agent of ${parent.name}`,
     purpose: opts.purpose,
     vibe: parent.vibe,
+    agentType: "open",
     status: "active",
     lifecycle: "infant",
     skills: opts.skills ?? [],
+    model: childModel ?? null,
+    providerId: parent.providerId,
+    contextWindow: parent.contextWindow,
+    maxToolIterations: Math.min(parent.maxToolIterations ?? 10, 10),
     systemPrompt: `You are a sub-agent spawned by ${parent.name} (${parent.emoji}).
 Your specific task: ${opts.purpose}
 Mode: ${opts.mode ?? "isolated"}
-Report your findings back concisely.`,
+Depth: ${currentDepth + 1}/${config.maxSpawnDepth}
+Report your findings back concisely. Be focused and efficient.`,
   }).returning();
 
   // Fork personality from parent if mode is fork/shared

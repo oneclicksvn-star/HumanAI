@@ -2,6 +2,7 @@ export {
   executeTool,
   executeApprovedTool,
   getAvailableTools,
+  getAgentAvailableTools,
   getPendingApprovals,
   approveToolCall,
   rejectToolCall,

@@ -1,5 +1,6 @@
 import { db } from "@humancore/db";
-import { tools, activityLog } from "@humancore/db/schema";
+import { tools, activityLog, agents } from "@humancore/db/schema";
+import type { AgentToolsConfig } from "@humancore/db/schema";
 import { eq } from "drizzle-orm";
 
 // ─── Tool Execution Engine ───────────────────────────────────────────────────
@@ -138,14 +139,28 @@ export async function executeTool(call: ToolCall): Promise<ToolResult> {
     return { success: false, output: "", error: `Unknown tool: ${call.toolName}`, durationMs: 0 };
   }
 
+  // Check per-agent tool policy
+  const agentPolicy = await resolveAgentToolPolicy(call.agentId);
+  if (agentPolicy) {
+    // Deny list check
+    if (agentPolicy.denyList?.includes(call.toolName)) {
+      return { success: false, output: "", error: `Tool ${call.toolName} is denied for this agent`, durationMs: 0 };
+    }
+    // Allow list check (if set, only listed tools are allowed)
+    if (agentPolicy.allowList && !agentPolicy.allowList.includes(call.toolName)) {
+      return { success: false, output: "", error: `Tool ${call.toolName} is not in agent's allow list`, durationMs: 0 };
+    }
+  }
+
   // Check if tool is enabled in DB
   const [dbTool] = await db.select().from(tools).where(eq(tools.name, call.toolName));
   if (dbTool && !dbTool.isEnabled) {
     return { success: false, output: "", error: `Tool ${call.toolName} is disabled`, durationMs: 0 };
   }
 
-  // Check approval requirement
-  const needsApproval = dbTool?.requiresApproval ?? toolDef.requiresApproval;
+  // Check approval requirement (per-agent override > DB > builtin default)
+  const agentRequiresApproval = agentPolicy?.requireApproval?.includes(call.toolName);
+  const needsApproval = agentRequiresApproval ?? dbTool?.requiresApproval ?? toolDef.requiresApproval;
   if (needsApproval) {
     const approvalId = `approval_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     approvalQueue.push({
@@ -498,4 +513,34 @@ async function executeDatetime(args: Record<string, unknown>): Promise<ToolResul
   } catch (err) {
     return { success: false, output: "", error: err instanceof Error ? err.message : String(err), durationMs: 0 };
   }
+}
+
+// ─── Per-Agent Tool Policy Resolution ────────────────────────────────────────
+
+async function resolveAgentToolPolicy(agentId: number): Promise<AgentToolsConfig | null> {
+  const [agent] = await db.select().from(agents).where(eq(agents.id, agentId));
+  if (!agent) return null;
+  return (agent.toolsConfig as AgentToolsConfig | null) ?? null;
+}
+
+/**
+ * Get the list of available tools for a specific agent,
+ * respecting their per-agent tool policy.
+ */
+export async function getAgentAvailableTools(agentId: number): Promise<Array<{ name: string; category: string; description: string; allowed: boolean; requiresApproval: boolean }>> {
+  const policy = await resolveAgentToolPolicy(agentId);
+  const allTools = Object.entries(BUILTIN_TOOLS);
+
+  return allTools.map(([name, def]) => {
+    let allowed = true;
+    let requiresApproval = def.requiresApproval;
+
+    if (policy) {
+      if (policy.denyList?.includes(name)) allowed = false;
+      if (policy.allowList && !policy.allowList.includes(name)) allowed = false;
+      if (policy.requireApproval?.includes(name)) requiresApproval = true;
+    }
+
+    return { name, category: def.category, description: def.description, allowed, requiresApproval };
+  });
 }

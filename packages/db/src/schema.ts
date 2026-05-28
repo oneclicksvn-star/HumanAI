@@ -9,7 +9,10 @@ export const agents = sqliteTable("agents", {
   nature: text("nature"),
   purpose: text("purpose"),
   vibe: text("vibe"),
-  status: text("status", { enum: ["active", "sleeping", "archived"] }).notNull().default("active"),
+  description: text("description"), // frontmatter / short expertise summary
+  agentType: text("agent_type", { enum: ["open", "predefined"] }).notNull().default("open"),
+  isDefault: integer("is_default", { mode: "boolean" }).notNull().default(false),
+  status: text("status", { enum: ["active", "sleeping", "archived", "summoning"] }).notNull().default("active"),
   mood: text("mood", { enum: ["neutral", "positive", "empathetic", "calming", "supportive", "focused", "reflective", "satisfied"] }).notNull().default("neutral"),
   moodLabel: text("mood_label").notNull().default("Neutral"),
   level: integer("level").notNull().default(1),
@@ -17,14 +20,64 @@ export const agents = sqliteTable("agents", {
   xpNext: integer("xp_next").notNull().default(1000),
   energy: integer("energy").notNull().default(100),
   lifecycle: text("lifecycle", { enum: ["infant", "child", "teen", "adult", "expert", "mentor"] }).notNull().default("infant"),
+  // LLM config
   model: text("model"),
   providerId: text("provider_id"),
   temperature: real("temperature"),
+  maxTokens: integer("max_tokens"),
+  contextWindow: integer("context_window").notNull().default(128000),
+  maxToolIterations: integer("max_tool_iterations").notNull().default(10),
+  // Prompt & behavior
   systemPrompt: text("system_prompt"),
+  thinkingLevel: text("thinking_level", { enum: ["off", "low", "medium", "high"] }).notNull().default("off"),
+  selfEvolve: integer("self_evolve", { mode: "boolean" }).notNull().default(false),
+  skillEvolve: integer("skill_evolve", { mode: "boolean" }).notNull().default(false),
+  // Per-agent JSONB configs (nullable — nil means use global defaults)
+  toolsConfig: text("tools_config", { mode: "json" }).$type<AgentToolsConfig | null>(),
+  subagentsConfig: text("subagents_config", { mode: "json" }).$type<AgentSubagentsConfig | null>(),
+  memoryConfig: text("memory_config", { mode: "json" }).$type<AgentMemoryConfig | null>(),
+  sandboxConfig: text("sandbox_config", { mode: "json" }).$type<AgentSandboxConfig | null>(),
+  // Workspace
+  workspace: text("workspace"),
+  restrictToWorkspace: integer("restrict_to_workspace", { mode: "boolean" }).notNull().default(false),
+  // Budget
+  budgetMonthlyCents: integer("budget_monthly_cents"),
+  // Legacy
   skills: text("skills", { mode: "json" }).$type<string[]>().default([]),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
   updatedAt: text("updated_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
+
+// ─── Agent Config Types ──────────────────────────────────────────────────────
+
+export interface AgentToolsConfig {
+  allowList?: string[];
+  denyList?: string[];
+  requireApproval?: string[];
+  toolCallPrefix?: string;
+}
+
+export interface AgentSubagentsConfig {
+  maxConcurrent?: number;      // default 4
+  maxSpawnDepth?: number;      // default 3
+  maxChildrenPerAgent?: number; // default 8
+  archiveAfterMinutes?: number; // default 30
+  model?: string;              // model override for subagents
+}
+
+export interface AgentMemoryConfig {
+  autoExtract?: boolean;       // auto-extract memories from chat
+  maxMemories?: number;        // max memories to store
+  consolidationInterval?: string; // e.g. "every 24h"
+  importanceThreshold?: number; // min importance to persist (0-1)
+}
+
+export interface AgentSandboxConfig {
+  enabled?: boolean;
+  timeoutMs?: number;
+  maxOutputBytes?: number;
+  allowNetwork?: boolean;
+}
 
 // ─── Personality (Big Five + custom traits) ──────────────────────────────────
 
@@ -341,6 +394,47 @@ export const systemLogs = sqliteTable("system_logs", {
   message: text("message").notNull(),
   agentId: integer("agent_id"),
   metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Agent Context Files (per-agent editable documents: SOUL.md, USER.md, etc.)
+
+export const agentContextFiles = sqliteTable("agent_context_files", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(), // e.g. "SOUL.md", "IDENTITY.md", "MEMORY.md", "AGENTS.md"
+  content: text("content").notNull().default(""),
+  isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false), // system files can't be deleted
+  updatedAt: text("updated_at").notNull().$defaultFn(() => new Date().toISOString()),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Agent Commitments (promises/goals the agent tracks) ─────────────────────
+
+export const agentCommitments = sqliteTable("agent_commitments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  type: text("type", { enum: ["event_check_in", "deadline_check", "care_check_in", "open_loop", "follow_up", "reminder"] }).notNull().default("open_loop"),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status", { enum: ["active", "completed", "broken", "expired"] }).notNull().default("active"),
+  dueAt: text("due_at"),
+  targetUserId: text("target_user_id"),
+  metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+  completedAt: text("completed_at"),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Agent Mood History ──────────────────────────────────────────────────────
+
+export const agentMoodHistory = sqliteTable("agent_mood_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  mood: text("mood").notNull(),
+  moodLabel: text("mood_label").notNull(),
+  energy: integer("energy").notNull(),
+  trigger: text("trigger"), // what caused the mood change
+  sessionId: integer("session_id"),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 
