@@ -102,7 +102,10 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
   const startTime = Date.now();
 
   try {
-    const result = streamText({
+    const modelName = overrideModel ?? agent.model ?? activeModel.provider.defaultModel ?? activeModel.provider.models?.[0] ?? "unknown";
+    console.log(`[Chat] Using provider: ${activeModel.provider.type} (id=${activeModel.provider.id}), model: ${modelName}`);
+
+    const result = await streamText({
       model: activeModel.model,
       system: systemPrompt,
       messages: aiMessages,
@@ -123,13 +126,21 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
         let outputTokens = 0;
 
         try {
-          for await (const chunk of (await result).textStream) {
+          for await (const chunk of result.textStream) {
             fullContent += chunk;
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`));
           }
 
+          // If no content was generated, report it clearly
+          if (!fullContent) {
+            const errMsg = `Model "${modelName}" on ${activeModel.provider.type} returned empty response. Try a different model.`;
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error: errMsg })}\n\n`));
+            controller.close();
+            return;
+          }
+
           // Get usage info
-          const usage = await (await result).usage;
+          const usage = await result.usage;
           inputTokens = usage?.promptTokens ?? 0;
           outputTokens = usage?.completionTokens ?? 0;
 
@@ -185,8 +196,18 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
           })}\n\n`));
 
         } catch (err) {
-          const errorMsg = err instanceof Error ? err.message : "Unknown error";
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error: errorMsg })}\n\n`));
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          console.error(`[Chat] Stream error for ${activeModel.provider.type}/${modelName}:`, errorMsg);
+
+          // Save error as agent message so it persists
+          const [errAgentMsg] = await db.insert(messages).values({
+            sessionId,
+            role: "agent",
+            content: `⚠️ [${activeModel.provider.type}] ${errorMsg}\n\nCheck provider settings or try a different model.`,
+            mood: agent.mood,
+          }).returning();
+
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done", message: errAgentMsg, provider: activeModel.provider.type, model: modelName })}\n\n`));
         } finally {
           controller.close();
         }
@@ -201,13 +222,14 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
       },
     });
   } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : "Unknown error";
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[Chat] Provider error (${activeModel.provider.type}):`, errorMsg);
 
     // Save error as agent message
     const [agentMsg] = await db.insert(messages).values({
       sessionId,
       role: "agent",
-      content: `⚠️ Error from ${activeModel.provider.type}: ${errorMsg}\n\nPlease check your API key in Settings > Providers.`,
+      content: `⚠️ Error from ${activeModel.provider.type}: ${errorMsg}\n\nPlease check your API key and model name in Settings > Providers.`,
       mood: agent.mood,
     }).returning();
 
