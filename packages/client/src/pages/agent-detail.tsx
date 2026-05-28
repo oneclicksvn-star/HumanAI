@@ -166,36 +166,49 @@ function StatCard({ label, value, sub, icon }: { label: string; value: string; s
 function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, onCancel }: any) {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><BookOpen size={14} /> Identity</h3>
-          {editing && <div className="flex gap-1"><button onClick={onSave} className="p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"><Check size={12} /></button><button onClick={onCancel} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200"><X size={12} /></button></div>}
-        </div>
-        {editing ? (
-          <div className="space-y-3">
-            <Field label="Name" value={editForm.name as string} onChange={v => setEditForm({ ...editForm, name: v })} />
-            <Field label="Emoji" value={editForm.emoji as string} onChange={v => setEditForm({ ...editForm, emoji: v })} />
-            <Field label="Nature" value={editForm.nature as string} onChange={v => setEditForm({ ...editForm, nature: v })} />
-            <Field label="Purpose" value={editForm.purpose as string} onChange={v => setEditForm({ ...editForm, purpose: v })} />
-            <Field label="Vibe" value={editForm.vibe as string} onChange={v => setEditForm({ ...editForm, vibe: v })} />
-            <Field label="Description" value={editForm.description as string} onChange={v => setEditForm({ ...editForm, description: v })} multiline />
-            <Field label="System Prompt" value={editForm.systemPrompt as string} onChange={v => setEditForm({ ...editForm, systemPrompt: v })} multiline />
-          </div>
-        ) : (
-          <div className="space-y-2 text-sm">
-            <InfoRow label="Name" value={`${agent.emoji} ${agent.name}`} />
-            <InfoRow label="Nature" value={agent.nature ?? "—"} />
-            <InfoRow label="Purpose" value={agent.purpose ?? "—"} />
-            <InfoRow label="Vibe" value={agent.vibe ?? "—"} />
-            <InfoRow label="Type" value={agent.agentType} />
-            <InfoRow label="Status" value={agent.status} />
-            {agent.description && <InfoRow label="Description" value={agent.description} />}
-            {agent.systemPrompt && <InfoRow label="System Prompt" value={agent.systemPrompt.slice(0, 200) + (agent.systemPrompt.length > 200 ? "..." : "")} />}
-          </div>
-        )}
-      </div>
-
+      {/* ─── LEFT COLUMN: Nhân vật (Personality/Identity) ─── */}
       <div className="space-y-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><BookOpen size={14} /> Nhân vật & Identity</h3>
+            {editing && <div className="flex gap-1"><button onClick={onSave} className="p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"><Check size={12} /></button><button onClick={onCancel} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200"><X size={12} /></button></div>}
+          </div>
+          {editing ? (
+            <div className="space-y-3">
+              <Field label="Name" value={editForm.name as string} onChange={v => setEditForm({ ...editForm, name: v })} />
+              <Field label="Emoji" value={editForm.emoji as string} onChange={v => setEditForm({ ...editForm, emoji: v })} />
+              <Field label="Nature" value={editForm.nature as string} onChange={v => setEditForm({ ...editForm, nature: v })} />
+              <Field label="Purpose" value={editForm.purpose as string} onChange={v => setEditForm({ ...editForm, purpose: v })} />
+              <Field label="Vibe" value={editForm.vibe as string} onChange={v => setEditForm({ ...editForm, vibe: v })} />
+              <Field label="Description" value={editForm.description as string} onChange={v => setEditForm({ ...editForm, description: v })} multiline />
+              <Field label="System Prompt" value={editForm.systemPrompt as string} onChange={v => setEditForm({ ...editForm, systemPrompt: v })} multiline />
+            </div>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <InfoRow label="Name" value={`${agent.emoji} ${agent.name}`} />
+              <InfoRow label="Nature" value={agent.nature ?? "—"} />
+              <InfoRow label="Purpose" value={agent.purpose ?? "—"} />
+              <InfoRow label="Vibe" value={agent.vibe ?? "—"} />
+              <InfoRow label="Type" value={agent.agentType} />
+              <InfoRow label="Status" value={agent.status} />
+              {agent.agentKey && <InfoRow label="Agent Key" value={agent.agentKey} />}
+              {agent.description && <InfoRow label="Description" value={agent.description} />}
+              {agent.systemPrompt && <InfoRow label="System Prompt" value={agent.systemPrompt.slice(0, 200) + (agent.systemPrompt.length > 200 ? "..." : "")} />}
+            </div>
+          )}
+        </div>
+
+        {/* System Prompt Mode */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Zap size={14} /> Prompt Mode</h3>
+          <div className="flex items-center gap-2">
+            <span className={cn("text-xs font-bold px-3 py-1.5 rounded-lg", agent.promptMode === "full" ? "bg-amber-50 text-amber-700" : agent.promptMode === "task" ? "bg-blue-50 text-blue-700" : agent.promptMode === "minimal" ? "bg-emerald-50 text-emerald-700" : "bg-gray-50 text-gray-600")}>
+              {agent.promptMode === "full" ? "Đầy đủ ~4.8K tokens" : agent.promptMode === "task" ? "Tác vụ ~1.3K tokens" : agent.promptMode === "minimal" ? "Tối giản ~570 tokens" : "Không ~640 tokens"}
+            </span>
+          </div>
+        </div>
+
+        {/* Skills */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><BarChart3 size={14} /> Skills</h3>
           <div className="space-y-2">
@@ -211,7 +224,39 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
             {(profile.skills ?? []).length === 0 && <p className="text-xs text-gray-400">No skills recorded yet</p>}
           </div>
         </div>
+      </div>
 
+      {/* ─── RIGHT COLUMN: Thông số (Parameters/Config) ─── */}
+      <div className="space-y-4">
+        {/* Model & Budget */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Brain size={14} /> Model & Budget</h3>
+          <div className="space-y-2 text-xs">
+            <InfoRow label="Provider" value={agent.providerId ?? "Default"} />
+            <InfoRow label="Model" value={agent.model ?? "Default"} />
+            <InfoRow label="Context Window" value={`${(agent.contextWindow ?? 128000).toLocaleString()} tokens`} />
+            <InfoRow label="Max Tool Iterations" value={`${agent.maxToolIterations ?? 10}`} />
+            <InfoRow label="Thinking Level" value={agent.thinkingLevel ?? "off"} />
+            <InfoRow label="Budget" value={agent.budgetMonthlyCents ? `$${(agent.budgetMonthlyCents / 100).toFixed(2)}/month` : "Unlimited"} />
+          </div>
+        </div>
+
+        {/* Evolution & Learning */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Sparkles size={14} /> Evolution & Learning</h3>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Self Evolution</span>
+              <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]", agent.selfEvolve ? "bg-orange-50 text-orange-600" : "bg-gray-50 text-gray-400")}>{agent.selfEvolve ? "Enabled" : "Disabled"}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Skill Learning</span>
+              <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]", agent.skillEvolve ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400")}>{agent.skillEvolve ? "Enabled" : "Disabled"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tool Policy */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Shield size={14} /> Tool Policy</h3>
           <div className="space-y-2 text-xs">
@@ -221,13 +266,32 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
           </div>
         </div>
 
+        {/* Delegation Stats */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Target size={14} /> Delegation Stats</h3>
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Target size={14} /> Delegation & Orchestration</h3>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div><span className="text-gray-400">Given</span> <span className="font-bold text-gray-700">{profile.stats.delegationsGiven}</span></div>
             <div><span className="text-gray-400">Received</span> <span className="font-bold text-gray-700">{profile.stats.delegationsReceived}</span></div>
             <div><span className="text-gray-400">Outbound Links</span> <span className="font-bold text-gray-700">{profile.stats.outboundLinks}</span></div>
             <div><span className="text-gray-400">Inbound Links</span> <span className="font-bold text-gray-700">{profile.stats.inboundLinks}</span></div>
+          </div>
+          {agent.subagentsConfig && (
+            <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5 text-xs">
+              <InfoRow label="Max Concurrent" value={`${agent.subagentsConfig.maxConcurrent ?? 4}`} />
+              <InfoRow label="Max Depth" value={`${agent.subagentsConfig.maxSpawnDepth ?? 3}`} />
+              <InfoRow label="Max Children" value={`${agent.subagentsConfig.maxChildrenPerAgent ?? 8}`} />
+            </div>
+          )}
+        </div>
+
+        {/* Memory Summary */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Brain size={14} /> Memory</h3>
+          <div className="space-y-2 text-xs">
+            <InfoRow label="Total Memories" value={`${profile.stats.memoriesCount ?? 0}`} />
+            <InfoRow label="Auto Extract" value={agent.memoryConfig?.autoExtract !== false ? "Yes" : "No"} />
+            {agent.memoryConfig?.maxResults && <InfoRow label="Max Results" value={`${agent.memoryConfig.maxResults}`} />}
+            {agent.memoryConfig?.vectorWeight && <InfoRow label="Vector Weight" value={`${agent.memoryConfig.vectorWeight}`} />}
           </div>
         </div>
       </div>
@@ -318,12 +382,22 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
             <ToggleField label="Auto Extract" value={form.autoExtract as boolean ?? true} onChange={v => setForm({ ...form, autoExtract: v })} />
             <NumberField label="Max Memories" value={form.maxMemories as number ?? 1000} onChange={v => setForm({ ...form, maxMemories: v })} min={100} max={50000} />
             <NumberField label="Importance Threshold" value={form.importanceThreshold as number ?? 0.3} onChange={v => setForm({ ...form, importanceThreshold: v })} min={0} max={1} step={0.05} />
+            <NumberField label="Max Chunk Length" value={form.maxChunkLength as number ?? 2000} onChange={v => setForm({ ...form, maxChunkLength: v })} min={100} max={10000} step={100} />
+            <NumberField label="Chunk Overlap" value={form.chunkOverlap as number ?? 200} onChange={v => setForm({ ...form, chunkOverlap: v })} min={0} max={1000} step={50} />
+            <NumberField label="Max Results" value={form.maxResults as number ?? 10} onChange={v => setForm({ ...form, maxResults: v })} min={1} max={50} />
+            <NumberField label="Min Score" value={form.minScore as number ?? 0.5} onChange={v => setForm({ ...form, minScore: v })} min={0} max={1} step={0.05} />
+            <NumberField label="Vector Weight" value={form.vectorWeight as number ?? 0.6} onChange={v => setForm({ ...form, vectorWeight: v })} min={0} max={1} step={0.1} />
+            <NumberField label="Text Weight" value={form.textWeight as number ?? 0.4} onChange={v => setForm({ ...form, textWeight: v })} min={0} max={1} step={0.1} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
             <InfoRow label="Auto Extract" value={config.memory.autoExtract ? "Yes" : "No"} />
             <InfoRow label="Max Memories" value={config.memory.maxMemories.toLocaleString()} />
             <InfoRow label="Importance" value={`≥ ${config.memory.importanceThreshold}`} />
+            <InfoRow label="Chunk Length" value={`${config.memory.maxChunkLength ?? 2000}`} />
+            <InfoRow label="Overlap" value={`${config.memory.chunkOverlap ?? 200}`} />
+            <InfoRow label="Max Results" value={`${config.memory.maxResults ?? 10}`} />
+            <InfoRow label="Vector/Text" value={`${config.memory.vectorWeight ?? 0.6} / ${config.memory.textWeight ?? 0.4}`} />
           </div>
         )}
       </ConfigSection>
@@ -356,6 +430,43 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
             <InfoRow label="Enabled" value={config.sandbox.enabled ? "Yes" : "No"} />
             <InfoRow label="Timeout" value={`${config.sandbox.timeoutMs}ms`} />
             <InfoRow label="Network" value={config.sandbox.allowNetwork ? "Allowed" : "Blocked"} />
+          </div>
+        )}
+      </ConfigSection>
+
+      {/* Dreaming Config */}
+      <ConfigSection title="Dreaming (Memory Consolidation)" icon={<Heart size={14} />} editing={editSection === "dreaming"} onEdit={() => startEdit("dreaming", config.dreaming ?? { enabled: false, threshold: 50, debounceMs: 300000, verbose: false })} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+        {editSection === "dreaming" ? (
+          <div className="space-y-3">
+            <ToggleField label="Enabled" value={form.enabled as boolean ?? false} onChange={v => setForm({ ...form, enabled: v })} />
+            <NumberField label="Threshold (memories)" value={form.threshold as number ?? 50} onChange={v => setForm({ ...form, threshold: v })} min={10} max={500} step={10} />
+            <NumberField label="Debounce (ms)" value={form.debounceMs as number ?? 300000} onChange={v => setForm({ ...form, debounceMs: v })} min={10000} max={3600000} step={10000} />
+            <ToggleField label="Verbose Log" value={form.verbose as boolean ?? false} onChange={v => setForm({ ...form, verbose: v })} />
+          </div>
+        ) : (
+          <div className="space-y-1.5 text-xs">
+            <InfoRow label="Enabled" value={config.dreaming?.enabled ? "Yes" : "No"} />
+            <InfoRow label="Threshold" value={`${config.dreaming?.threshold ?? 50} memories`} />
+            <InfoRow label="Debounce" value={`${((config.dreaming?.debounceMs ?? 300000) / 60000).toFixed(0)} min`} />
+            <InfoRow label="Verbose" value={config.dreaming?.verbose ? "Yes" : "No"} />
+          </div>
+        )}
+      </ConfigSection>
+
+      {/* Prompt Mode Config */}
+      <ConfigSection title="System Prompt Mode" icon={<Zap size={14} />} editing={editSection === "promptMode"} onEdit={() => startEdit("promptMode", { promptMode: config.promptMode ?? "full" })} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+        {editSection === "promptMode" ? (
+          <div className="space-y-3">
+            <SelectField label="Mode" value={form.promptMode as string ?? "full"} onChange={v => setForm({ ...form, promptMode: v })} options={[
+              { value: "full", label: "Đầy đủ (~4.8K tokens)" },
+              { value: "task", label: "Tác vụ (~1.3K tokens)" },
+              { value: "minimal", label: "Tối giản (~570 tokens)" },
+              { value: "none", label: "Không (~640 tokens)" },
+            ]} />
+          </div>
+        ) : (
+          <div className="space-y-1.5 text-xs">
+            <InfoRow label="Mode" value={config.promptMode === "full" ? "Đầy đủ (~4.8K)" : config.promptMode === "task" ? "Tác vụ (~1.3K)" : config.promptMode === "minimal" ? "Tối giản (~570)" : "Không (~640)"} />
           </div>
         )}
       </ConfigSection>

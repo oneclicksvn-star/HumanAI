@@ -29,11 +29,14 @@ agentsRoutes.post("/agents", async (c) => {
     vibe: body.vibe,
     description: body.description,
     agentType: body.agentType ?? "open",
+    agentKey: body.agentKey ?? null,
+    promptMode: body.promptMode ?? "full",
     model: body.model,
     providerId: body.providerId,
     temperature: body.temperature,
     maxTokens: body.maxTokens,
     contextWindow: body.contextWindow ?? 128000,
+    maxToolIterations: body.maxToolIterations ?? 10,
     thinkingLevel: body.thinkingLevel ?? "off",
     selfEvolve: body.selfEvolve ?? false,
     skillEvolve: body.skillEvolve ?? false,
@@ -43,6 +46,8 @@ agentsRoutes.post("/agents", async (c) => {
     subagentsConfig: body.subagentsConfig ?? null,
     memoryConfig: body.memoryConfig ?? null,
     sandboxConfig: body.sandboxConfig ?? null,
+    dreamingConfig: body.dreamingConfig ?? null,
+    budgetMonthlyCents: body.budgetMonthlyCents ?? null,
   }).returning();
 
   // Create default personality
@@ -309,8 +314,10 @@ agentsRoutes.get("/agents/:id/config", async (c) => {
     },
     tools: agent.toolsConfig ?? { allowList: null, denyList: null, requireApproval: null },
     subagents: agent.subagentsConfig ?? { maxConcurrent: 4, maxSpawnDepth: 3, maxChildrenPerAgent: 8, archiveAfterMinutes: 30 },
-    memory: agent.memoryConfig ?? { autoExtract: true, maxMemories: 1000, importanceThreshold: 0.3 },
+    memory: agent.memoryConfig ?? { autoExtract: true, maxMemories: 1000, importanceThreshold: 0.3, maxChunkLength: 2000, chunkOverlap: 200, maxResults: 10, minScore: 0.5, vectorWeight: 0.6, textWeight: 0.4 },
     sandbox: agent.sandboxConfig ?? { enabled: true, timeoutMs: 30000, maxOutputBytes: 1048576, allowNetwork: false },
+    dreaming: agent.dreamingConfig ?? { enabled: false, threshold: 50, debounceMs: 300000, verbose: false },
+    promptMode: agent.promptMode ?? "full",
     behavior: {
       selfEvolve: agent.selfEvolve,
       skillEvolve: agent.skillEvolve,
@@ -349,6 +356,8 @@ agentsRoutes.patch("/agents/:id/config", async (c) => {
   if (body.budget) {
     if (body.budget.monthlyCents !== undefined) updates.budgetMonthlyCents = body.budget.monthlyCents;
   }
+  if (body.dreaming !== undefined) updates.dreamingConfig = body.dreaming;
+  if (body.promptMode !== undefined) updates.promptMode = body.promptMode.promptMode ?? body.promptMode;
 
   updates.updatedAt = new Date().toISOString();
   const [agent] = await db.update(agents).set(updates).where(eq(agents.id, id)).returning();

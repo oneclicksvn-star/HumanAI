@@ -40,6 +40,12 @@ export const agents = sqliteTable("agents", {
   // Workspace
   workspace: text("workspace"),
   restrictToWorkspace: integer("restrict_to_workspace", { mode: "boolean" }).notNull().default(false),
+  // Agent key (slug identifier)
+  agentKey: text("agent_key"),
+  // System prompt mode
+  promptMode: text("prompt_mode", { enum: ["full", "task", "minimal", "none"] }).notNull().default("full"),
+  // Dreaming config
+  dreamingConfig: text("dreaming_config", { mode: "json" }).$type<AgentDreamingConfig | null>(),
   // Budget
   budgetMonthlyCents: integer("budget_monthly_cents"),
   // Legacy
@@ -66,10 +72,24 @@ export interface AgentSubagentsConfig {
 }
 
 export interface AgentMemoryConfig {
+  enabled?: boolean;           // memory enabled for this agent
   autoExtract?: boolean;       // auto-extract memories from chat
   maxMemories?: number;        // max memories to store
   consolidationInterval?: string; // e.g. "every 24h"
   importanceThreshold?: number; // min importance to persist (0-1)
+  maxChunkLength?: number;     // max chunk length for memory extraction
+  chunkOverlap?: number;       // overlap between chunks
+  maxResults?: number;         // max results for memory search
+  minScore?: number;           // min similarity score for retrieval
+  vectorWeight?: number;       // weight for vector similarity (0-1)
+  textWeight?: number;         // weight for text match (0-1)
+}
+
+export interface AgentDreamingConfig {
+  enabled?: boolean;           // dreaming enabled
+  threshold?: number;          // min memories before consolidation
+  debounceMs?: number;         // debounce between runs
+  verbose?: boolean;           // verbose logging
 }
 
 export interface AgentSandboxConfig {

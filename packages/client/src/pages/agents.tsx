@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { cn, MOOD_COLORS } from "@/lib/utils";
 import { useAgents, useCreateAgent, useDeleteAgent, useProviders } from "@/hooks/useApi";
-import { Plus, Trash2, Search, ChevronRight, Lightbulb, MessageCircle } from "lucide-react";
+import { Plus, Trash2, Search, ChevronRight, Lightbulb, MessageCircle, Zap, Wrench, Package, CircleOff, Sparkles, Brain, Moon, DollarSign, Settings2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STAGE_COLORS: Record<string, string> = { infant: "#60a5fa", child: "#34d399", teen: "#f59e0b", adult: "#f97316", expert: "#ef4444", mentor: "#8b5cf6" };
@@ -38,6 +38,25 @@ const DESCRIPTION_HINTS: Record<string, string> = {
   social: "e.g. Chuyên giao tiếp, quản lý quan hệ, và phối hợp nhóm",
 };
 
+// System Prompt Modes (from GoClaw reference)
+const PROMPT_MODES = [
+  { id: "full", label: "Đầy đủ", tokens: "~4.8K", icon: Zap, color: "text-amber-500", desc: "Tất cả: persona, tools, safety, skills, memory, sandbox" },
+  { id: "task", label: "Tác vụ", tokens: "~1.3K", icon: Wrench, color: "text-blue-500", desc: "Thu gọn: tools, execBias, safety, skills" },
+  { id: "minimal", label: "Tối giản", tokens: "~570", icon: Package, color: "text-emerald-500", desc: "Tối thiểu: tools, pinnedSkills, domain context" },
+  { id: "none", label: "Không", tokens: "~640", icon: CircleOff, color: "text-gray-400", desc: "Chỉ tools + workspace (không persona)" },
+];
+
+// Description presets (personality pills from GoClaw)
+const DESCRIPTION_PRESETS = [
+  { label: "🦊 Fox Spirit", prompt: "Tinh ranh, thông minh, trả lời nhanh gọn với chút hài hước. Thích thử thách và luôn tìm cách sáng tạo." },
+  { label: "💻 Coder", prompt: "Kỹ sư phần mềm chuyên nghiệp. Viết code sạch, review kỹ, giải thích rõ ràng. Ưu tiên best practices." },
+  { label: "🎧 Support", prompt: "Hỗ trợ khách hàng tận tâm. Kiên nhẫn, lắng nghe, giải quyết vấn đề từng bước. Luôn positive." },
+  { label: "✍️ Writer", prompt: "Nhà văn sáng tạo. Ngôn từ phong phú, kể chuyện lôi cuốn, tạo nội dung độc đáo và thu hút." },
+  { label: "🌐 Translator", prompt: "Phiên dịch chuyên nghiệp đa ngôn ngữ. Dịch chính xác ngữ cảnh, giữ nguyên tone và ý nghĩa gốc." },
+  { label: "🎨 Artisan", prompt: "Nghệ nhân sáng tạo. Tư duy thẩm mỹ, đề xuất ý tưởng design, phối màu và layout chuyên nghiệp." },
+  { label: "🔮 Oracle", prompt: "Cố vấn chiến lược. Nhìn xa trông rộng, phân tích đa chiều, đưa ra lời khuyên sâu sắc và có tầm nhìn." },
+];
+
 type ModelOption = { id: string; name: string; contextWindow: number; reasoning: boolean; vision: boolean };
 
 export default function Agents() {
@@ -58,7 +77,16 @@ export default function Agents() {
     name: "", emoji: "🤖", nature: "analytical", purpose: "", vibe: "warm",
     description: "", systemPrompt: "", model: "", providerId: "",
     thinkingLevel: "off",
+    // New fields (补充)
+    agentKey: "",
+    promptMode: "full",
+    selfEvolve: false,
+    skillEvolve: false,
+    contextWindow: 128000,
+    maxToolIterations: 10,
+    budgetDollars: "",
   });
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Load models when provider changes
   useEffect(() => {
@@ -100,9 +128,16 @@ export default function Agents() {
       model: form.model || undefined,
       providerId: form.providerId || undefined,
       thinkingLevel: form.thinkingLevel,
+      agentKey: form.agentKey || undefined,
+      promptMode: form.promptMode,
+      selfEvolve: form.selfEvolve,
+      skillEvolve: form.skillEvolve,
+      contextWindow: form.contextWindow,
+      maxToolIterations: form.maxToolIterations,
+      budgetMonthlyCents: form.budgetDollars ? Math.round(parseFloat(form.budgetDollars) * 100) : undefined,
     });
     setShowCreate(false);
-    setForm({ name: "", emoji: "🤖", nature: "analytical", purpose: "", vibe: "warm", description: "", systemPrompt: "", model: "", providerId: "", thinkingLevel: "off" });
+    setForm({ name: "", emoji: "🤖", nature: "analytical", purpose: "", vibe: "warm", description: "", systemPrompt: "", model: "", providerId: "", thinkingLevel: "off", agentKey: "", promptMode: "full", selfEvolve: false, skillEvolve: false, contextWindow: 128000, maxToolIterations: 10, budgetDollars: "" });
   };
 
   return (
@@ -241,6 +276,107 @@ export default function Agents() {
                     <textarea value={form.systemPrompt} onChange={e => setForm({ ...form, systemPrompt: e.target.value })} placeholder="Describe how this agent should behave, its expertise, tone, and constraints..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-24 resize-none font-mono" />
                     {!form.systemPrompt && <p className="text-[9px] text-gray-300 mt-0.5">Tip: Describe personality, expertise, tone. The better the prompt, the more unique your agent.</p>}
                   </div>
+                </div>
+
+                {/* ─── Agent Key ─── */}
+                <div className="col-span-2 border-t border-gray-100 pt-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] text-gray-400">Agent Key (slug)</label>
+                      <input value={form.agentKey} onChange={e => setForm({ ...form, agentKey: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") })} placeholder="e.g. luna-assistant" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono" />
+                      <p className="text-[9px] text-gray-300 mt-0.5">Machine-readable identifier (auto-generated if empty)</p>
+                    </div>
+                    <div />
+                  </div>
+                </div>
+
+                {/* ─── Description Presets (Pills) ─── */}
+                <div className="col-span-2">
+                  <label className="text-[10px] text-gray-400 mb-1 block">Description Presets</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {DESCRIPTION_PRESETS.map(p => (
+                      <button key={p.label} type="button" onClick={() => setForm({ ...form, description: p.prompt })} className="text-[10px] px-2.5 py-1 rounded-full border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ─── System Prompt Mode (4 cards) ─── */}
+                <div className="col-span-2">
+                  <label className="text-[10px] text-gray-400 mb-1.5 block">System Prompt Mode</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {PROMPT_MODES.map(mode => {
+                      const Icon = mode.icon;
+                      const selected = form.promptMode === mode.id;
+                      return (
+                        <button key={mode.id} type="button" onClick={() => setForm({ ...form, promptMode: mode.id })} className={cn("flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center", selected ? "border-indigo-500 bg-indigo-50" : "border-gray-100 hover:border-gray-300")}>
+                          <Icon size={16} className={mode.color} />
+                          <span className="text-[11px] font-semibold text-gray-700">{mode.label}</span>
+                          <span className="text-[9px] text-gray-400">{mode.tokens}</span>
+                          <span className="text-[8px] text-gray-300 leading-tight">{mode.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ─── Self-Evolution Toggle ─── */}
+                <div className="col-span-2 flex items-center gap-4 rounded-lg border border-gray-100 px-4 py-3">
+                  <Sparkles size={16} className="text-orange-500 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-gray-700">Self-Evolution</p>
+                    <p className="text-[9px] text-gray-400">Agent tự cải tiến personality và skills qua thời gian</p>
+                  </div>
+                  <button type="button" onClick={() => setForm({ ...form, selfEvolve: !form.selfEvolve })} className={cn("w-10 h-5 rounded-full transition-colors relative", form.selfEvolve ? "bg-orange-500" : "bg-gray-200")}>
+                    <div className={cn("w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm", form.selfEvolve ? "translate-x-5" : "translate-x-0.5")} />
+                  </button>
+                </div>
+
+                {/* ─── Advanced Settings (collapsible) ─── */}
+                <div className="col-span-2">
+                  <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-[11px] text-gray-500 hover:text-indigo-600 transition-colors">
+                    <Settings2 size={12} />
+                    <span>{showAdvanced ? "Hide" : "Show"} Advanced Settings</span>
+                    <span className="text-[9px] text-gray-300">(Budget, Memory, Dreaming)</span>
+                  </button>
+                  {showAdvanced && (
+                    <div className="mt-3 grid grid-cols-2 gap-4 p-4 rounded-lg bg-gray-50 border border-gray-100">
+                      {/* Model & Budget */}
+                      <div className="space-y-2">
+                        <h5 className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><DollarSign size={10} /> Model & Budget</h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[9px] text-gray-400">Context Window</label>
+                            <input type="number" value={form.contextWindow} onChange={e => setForm({ ...form, contextWindow: Number(e.target.value) || 128000 })} className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs" />
+                          </div>
+                          <div>
+                            <label className="text-[9px] text-gray-400">Max Tool Iterations</label>
+                            <input type="number" value={form.maxToolIterations} onChange={e => setForm({ ...form, maxToolIterations: Number(e.target.value) || 10 })} className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-gray-400">Budget ($/month)</label>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400">$</span>
+                            <input type="number" min="0" step="0.01" value={form.budgetDollars} onChange={e => setForm({ ...form, budgetDollars: e.target.value })} placeholder="0.00" className="w-32 px-2 py-1.5 border border-gray-200 rounded-lg text-xs" />
+                          </div>
+                          <p className="text-[8px] text-gray-300 mt-0.5">Leave empty for unlimited</p>
+                        </div>
+                      </div>
+                      {/* Skill Evolution */}
+                      <div className="space-y-2">
+                        <h5 className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><Brain size={10} /> Learning</h5>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-gray-600">Skill Learning</span>
+                          <button type="button" onClick={() => setForm({ ...form, skillEvolve: !form.skillEvolve })} className={cn("w-8 h-4 rounded-full transition-colors relative", form.skillEvolve ? "bg-amber-500" : "bg-gray-200")}>
+                            <div className={cn("w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm", form.skillEvolve ? "translate-x-4" : "translate-x-0.5")} />
+                          </button>
+                        </div>
+                        <p className="text-[8px] text-gray-300">Agent tự học và phát triển skill mới từ interactions</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="col-span-2 flex justify-end gap-2 pt-2 border-t border-gray-100">
