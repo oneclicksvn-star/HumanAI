@@ -247,11 +247,25 @@ export const dreams = sqliteTable("dreams", {
 export const providers = sqliteTable("providers", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  type: text("type").notNull(), // anthropic, openai, google, ollama, etc.
+  displayName: text("display_name"),
+  type: text("type").notNull(), // anthropic, openai, google, ollama, custom_openai, etc.
   apiKey: text("api_key"),
   baseUrl: text("base_url"),
+  authType: text("auth_type").notNull().default("bearer"), // bearer, x-api-key, none
   models: text("models", { mode: "json" }).$type<string[]>().default([]),
+  defaultModel: text("default_model"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  priority: integer("priority").notNull().default(0), // 0 = highest priority for fallback chain
+  settings: text("settings", { mode: "json" }).$type<{
+    embedding?: { enabled: boolean; model: string; dimensions?: number };
+    reasoning_defaults?: { effort: string; fallback?: string };
+    rate_limit?: { rpm?: number; tpm?: number };
+    cost_tracking?: { input_cost_per_1k?: number; output_cost_per_1k?: number };
+  }>().default({}),
+  lastTestedAt: text("last_tested_at"),
+  lastTestStatus: text("last_test_status"), // "ok" | "fail" | null
+  cachedModels: text("cached_models", { mode: "json" }).$type<Array<{ id: string; name: string; contextWindow?: number; maxTokens?: number; reasoning?: boolean; vision?: boolean; imageGen?: boolean; embedding?: boolean; costInput?: number; costOutput?: number }>>(),
+  modelsCachedAt: text("models_cached_at"),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 

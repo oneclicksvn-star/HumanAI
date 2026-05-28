@@ -214,11 +214,20 @@ export interface Dream {
 export interface Provider {
   id: number;
   name: string;
+  displayName: string | null;
   type: string;
   apiKey: string | null;
   baseUrl: string | null;
+  authType: string;
   models: string[];
+  defaultModel: string | null;
   isActive: boolean;
+  priority: number;
+  settings: Record<string, unknown>;
+  lastTestedAt: string | null;
+  lastTestStatus: string | null;
+  cachedModels: Array<{ id: string; name: string; contextWindow?: number; maxTokens?: number; reasoning?: boolean; vision?: boolean }> | null;
+  modelsCachedAt: string | null;
 }
 
 export interface KnowledgeGraph {
