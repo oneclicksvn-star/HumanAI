@@ -1,0 +1,15 @@
+{
+  "name": "humancore-ai",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "dev:server": "bun run --filter @humancore/server dev",
+    "dev:client": "bun run --filter @humancore/client dev",
+    "build": "bun run --filter '*' build",
+    "db:push": "bun run --filter @humancore/db push",
+    "db:seed": "bun run scripts/seed.ts",
+    "typecheck": "bun run --filter '*' typecheck"
+  }
+}

@@ -1,0 +1,231 @@
+const BASE = "/api";
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    ...options,
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  if (res.status === 204) return undefined as T;
+  return res.json();
+}
+
+// ─── Types ────────────────────────────────────────────────
+
+export interface Agent {
+  id: number;
+  name: string;
+  emoji: string;
+  nature: string | null;
+  purpose: string | null;
+  vibe: string | null;
+  status: "active" | "sleeping" | "archived";
+  mood: string;
+  moodLabel: string;
+  level: number;
+  xp: number;
+  xpNext: number;
+  energy: number;
+  lifecycle: string;
+  model: string | null;
+  providerId: string | null;
+  temperature: number | null;
+  skills: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Personality {
+  id: number;
+  agentId: number;
+  openness: number;
+  conscientiousness: number;
+  extraversion: number;
+  agreeableness: number;
+  neuroticism: number;
+  creativity: number;
+  empathy: number;
+  humor: number;
+  curiosity: number;
+  assertiveness: number;
+  communicationStyle: string;
+}
+
+export interface Session {
+  id: number;
+  agentId: number;
+  title: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+  agent: Agent | null;
+}
+
+export interface Message {
+  id: number;
+  sessionId: number;
+  role: "user" | "agent" | "system" | "tool";
+  content: string;
+  mood: string | null;
+  thinking: string | null;
+  toolCalls: Array<{ name: string; input: string | null; output: string | null; status: string; durationMs: number }> | null;
+  moodShift: { from: string; to: string } | null;
+  createdAt: string;
+}
+
+export interface Team {
+  id: number;
+  name: string;
+  description: string | null;
+  leadAgentId: number | null;
+  agentIds: number[];
+  values: string[];
+  communicationStyle: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface Task {
+  id: number;
+  teamId: number;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  assignedAgentId: number | null;
+  progress: number;
+  qualityStars: number | null;
+  createdAt: string;
+  assignee: Agent | null;
+}
+
+export interface MemoryEntry {
+  id: number;
+  agentId: number;
+  title: string;
+  summary: string;
+  type: string;
+  mood: string;
+  tags: string[];
+  importance: number;
+  recallCount: number;
+  createdAt: string;
+}
+
+export interface DashboardStats {
+  activeAgents: number;
+  sessionsToday: number;
+  tokensToday: number;
+  openTasks: number;
+  totalMemories: number;
+}
+
+export interface ActivityItem {
+  id: number;
+  agentId: number | null;
+  type: string;
+  summary: string;
+  createdAt: string;
+}
+
+export interface Dream {
+  id: number;
+  agentId: number;
+  title: string;
+  insight: string;
+  sourceTags: string[];
+  consolidatedAt: string;
+  agent?: Agent;
+}
+
+export interface Provider {
+  id: number;
+  name: string;
+  type: string;
+  apiKey: string | null;
+  baseUrl: string | null;
+  models: string[];
+  isActive: boolean;
+}
+
+export interface KnowledgeGraph {
+  nodes: Array<{ id: number; agentId: number; nodeId: string; label: string; type: string; confidence: number; x: number | null; y: number | null }>;
+  edges: Array<{ id: number; agentId: number; source: string; target: string; relation: string; weight: number }>;
+}
+
+export interface AgentSkill {
+  id: number;
+  agentId: number;
+  name: string;
+  mastery: number;
+  practiceCount: number;
+  category: string;
+}
+
+// ─── API functions ────────────────────────────────────────
+
+export const api = {
+  // Agents
+  listAgents: () => request<Agent[]>("/agents"),
+  getAgent: (id: number) => request<Agent>(`/agents/${id}`),
+  createAgent: (data: Partial<Agent>) => request<Agent>("/agents", { method: "POST", body: JSON.stringify(data) }),
+  updateAgent: (id: number, data: Partial<Agent>) => request<Agent>(`/agents/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteAgent: (id: number) => request<void>(`/agents/${id}`, { method: "DELETE" }),
+  getPersonality: (id: number) => request<Personality>(`/agents/${id}/personality`),
+  updatePersonality: (id: number, data: Partial<Personality>) => request<Personality>(`/agents/${id}/personality`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  // Sessions
+  listSessions: () => request<Session[]>("/sessions"),
+  getSession: (id: number) => request<Session>(`/sessions/${id}`),
+  createSession: (data: { agentId: number; title?: string }) => request<Session>("/sessions", { method: "POST", body: JSON.stringify(data) }),
+  deleteSession: (id: number) => request<void>(`/sessions/${id}`, { method: "DELETE" }),
+
+  // Messages
+  listMessages: (sessionId: number) => request<Message[]>(`/sessions/${sessionId}/messages`),
+  sendMessage: (sessionId: number, data: { content: string; role?: string }) => request<Message>(`/sessions/${sessionId}/messages`, { method: "POST", body: JSON.stringify(data) }),
+
+  // Teams
+  listTeams: () => request<Team[]>("/teams"),
+  createTeam: (data: Partial<Team>) => request<Team>("/teams", { method: "POST", body: JSON.stringify(data) }),
+  updateTeam: (id: number, data: Partial<Team>) => request<Team>(`/teams/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteTeam: (id: number) => request<void>(`/teams/${id}`, { method: "DELETE" }),
+
+  // Tasks
+  listTasks: (teamId?: number) => request<Task[]>(`/tasks${teamId ? `?teamId=${teamId}` : ""}`),
+  createTask: (data: Partial<Task>) => request<Task>("/tasks", { method: "POST", body: JSON.stringify(data) }),
+  updateTask: (id: number, data: Partial<Task>) => request<Task>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteTask: (id: number) => request<void>(`/tasks/${id}`, { method: "DELETE" }),
+
+  // Memory
+  listMemories: (agentId?: number) => request<MemoryEntry[]>(`/memory${agentId ? `?agentId=${agentId}` : ""}`),
+  createMemory: (data: Partial<MemoryEntry>) => request<MemoryEntry>("/memory", { method: "POST", body: JSON.stringify(data) }),
+  deleteMemory: (id: number) => request<void>(`/memory/${id}`, { method: "DELETE" }),
+
+  // Knowledge graph
+  getKnowledgeGraph: (agentId?: number) => request<KnowledgeGraph>(`/knowledge-graph${agentId ? `?agentId=${agentId}` : ""}`),
+
+  // Skills
+  listSkills: (agentId?: number) => request<AgentSkill[]>(`/skills${agentId ? `?agentId=${agentId}` : ""}`),
+
+  // Dreams
+  listDreams: (agentId?: number) => request<Dream[]>(`/dreams${agentId ? `?agentId=${agentId}` : ""}`),
+
+  // Dashboard
+  getDashboardStats: () => request<DashboardStats>("/dashboard/stats"),
+  getDashboardActivity: () => request<ActivityItem[]>("/dashboard/activity"),
+  getDashboardDreams: () => request<Dream[]>("/dashboard/dreams"),
+
+  // Providers
+  listProviders: () => request<Provider[]>("/providers"),
+  createProvider: (data: Partial<Provider>) => request<Provider>("/providers", { method: "POST", body: JSON.stringify(data) }),
+  updateProvider: (id: number, data: Partial<Provider>) => request<Provider>(`/providers/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteProvider: (id: number) => request<void>(`/providers/${id}`, { method: "DELETE" }),
+
+  // Settings
+  listSettings: () => request<Array<{ key: string; value: string; category: string }>>("/settings"),
+  putSetting: (key: string, value: string, category?: string) => request<{ key: string; value: string }>(`/settings/${key}`, { method: "PUT", body: JSON.stringify({ value, category }) }),
+
+  // Health
+  health: () => request<{ status: string }>("/health"),
+};
