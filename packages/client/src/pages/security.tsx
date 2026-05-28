@@ -11,9 +11,9 @@ const RULES = [
 
 const AUDIT = [
   { action: "Tool approval granted", user: "Admin", time: "2 hours ago" },
-  { action: "API key rotated", user: "System", time: "1 day ago" },
+  { action: "API key rotated", user: "Hệ thống", time: "1 day ago" },
   { action: "Security rule updated", user: "Admin", time: "3 days ago" },
-  { action: "Failed login attempt blocked", user: "System", time: "5 days ago" },
+  { action: "Failed login attempt blocked", user: "Hệ thống", time: "5 days ago" },
 ];
 
 export default function Security() {
@@ -21,7 +21,7 @@ export default function Security() {
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Security</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Bảo mật</h1>
           <p className="text-gray-500">Security rules, audit log, and access control</p>
         </div>
       </div>
@@ -30,9 +30,9 @@ export default function Security() {
       <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 mb-8 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm opacity-80">Security Score</div>
+            <div className="text-sm opacity-80">Điểm bảo mật</div>
             <div className="text-4xl font-bold mt-1">92/100</div>
-            <div className="text-sm mt-1 opacity-80">All critical rules enforced</div>
+            <div className="text-sm mt-1 opacity-80">Tất cả quy tắc bảo mật đã áp dụng</div>
           </div>
           <Shield size={48} className="opacity-50" />
         </div>
@@ -50,7 +50,7 @@ export default function Security() {
                 {rule.locked ? (
                   <Lock size={14} className="text-gray-400" />
                 ) : (
-                  <button className="text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-500 hover:bg-gray-100">Edit</button>
+                  <button className="text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-500 hover:bg-gray-100">Sửa</button>
                 )}
               </div>
             ))}
@@ -78,7 +78,7 @@ export default function Security() {
       <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
         <AlertTriangle size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
         <div>
-          <div className="font-medium text-amber-800">Ethics Value Core</div>
+          <div className="font-medium text-amber-800">Hệ giá trị đạo đức</div>
           <div className="text-sm text-amber-700">Critical security rules (marked with 🔒) are hard-locked and cannot be modified. These protect against harmful agent behavior and data exposure.</div>
         </div>
       </div>

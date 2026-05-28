@@ -12,10 +12,10 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; icon: any }> = {
 };
 
 const SCHEDULE_PRESETS = [
-  { label: "Every 5 min", value: "every 5m" },
-  { label: "Every hour", value: "every 1h" },
+  { label: "Every 5 min", value: "mỗi 5 phút" },
+  { label: "Every hour", value: "mỗi 1 giờ" },
   { label: "Every 6h", value: "every 6h" },
-  { label: "Daily", value: "every 24h" },
+  { label: "Daily", value: "mỗi 24 giờ" },
   { label: "Weekly", value: "every 168h" },
 ];
 
@@ -33,7 +33,7 @@ export default function CronJobsPage() {
   const updateJob = useUpdateCronJob();
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: "", schedule: "every 1h", command: "consolidate", agentId: 0 });
+  const [form, setForm] = useState({ name: "", schedule: "mỗi 1 giờ", command: "consolidate", agentId: 0 });
   const agentMap = Object.fromEntries(agents.map((a: any) => [a.id, a]));
 
   const handleCreate = () => {
@@ -45,11 +45,11 @@ export default function CronJobsPage() {
       status: "active",
     } as any);
     setShowCreate(false);
-    setForm({ name: "", schedule: "every 1h", command: "consolidate", agentId: 0 });
+    setForm({ name: "", schedule: "mỗi 1 giờ", command: "consolidate", agentId: 0 });
   };
 
   const handleToggle = (id: number, status: string) => {
-    updateJob.mutate({ id, status: status === "active" ? "paused" : "active" } as any);
+    updateJob.mutate({ id, status: status === "active" ? "tạm dừng" : "active" } as any);
   };
 
   const handleDelete = async (id: number) => {
@@ -61,7 +61,7 @@ export default function CronJobsPage() {
     <div className="p-7 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cron Jobs</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Tác vụ định kỳ</h1>
           <p className="text-sm text-gray-400 mt-0.5">{jobs.filter((j: any) => j.status === "active").length} active · {jobs.length} total</p>
         </div>
         <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2.5 rounded-2xl shadow-[0_4px_12px_rgba(99,102,241,0.4)] hover:bg-indigo-700 transition-colors">
@@ -73,35 +73,35 @@ export default function CronJobsPage() {
       {showCreate && (
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-700">New Cron Job</h3>
+            <h3 className="text-sm font-bold text-gray-700">Tác vụ định kỳ mới</h3>
             <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Name</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase">Tên</label>
               <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Memory Consolidation" className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-300" />
             </div>
             <div>
               <label className="text-[10px] font-bold text-gray-500 uppercase">Agent (optional)</label>
               <select value={form.agentId} onChange={e => setForm({ ...form, agentId: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                <option value={0}>All Agents</option>
+                <option value={0}>Tất cả Agent</option>
                 {agents.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Schedule</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase">Lịch trình</label>
               <select value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 {SCHEDULE_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label} ({p.value})</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Command</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase">Lệnh</label>
               <select value={form.command} onChange={e => setForm({ ...form, command: e.target.value })} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 {COMMAND_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </div>
           </div>
-          <button onClick={handleCreate} disabled={!form.name} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50">Create Job</button>
+          <button onClick={handleCreate} disabled={!form.name} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50">Tạo tác vụ</button>
         </div>
       )}
 
@@ -110,8 +110,8 @@ export default function CronJobsPage() {
         {jobs.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
             <Clock size={28} className="text-gray-200 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">No cron jobs configured</p>
-            <p className="text-xs text-gray-300 mt-1">Create a job to run tasks on a schedule</p>
+            <p className="text-sm text-gray-400">Chưa có tác vụ định kỳ</p>
+            <p className="text-xs text-gray-300 mt-1">Tạo tác vụ chạy theo lịch</p>
           </div>
         )}
         {jobs.map((job: any) => {
@@ -119,7 +119,7 @@ export default function CronJobsPage() {
           const style = STATUS_STYLES[job.status] ?? STATUS_STYLES.paused;
           const StatusIcon = style.icon;
           return (
-            <div key={job.id} className={cn("bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow", job.status === "paused" && "opacity-70")}>
+            <div key={job.id} className={cn("bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow", job.status === "tạm dừng" && "opacity-70")}>
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
                   <Clock size={18} className="text-indigo-500" />
@@ -146,7 +146,7 @@ export default function CronJobsPage() {
                 <button onClick={() => handleToggle(job.id, job.status)}
                   className={cn("px-3 py-1.5 text-xs font-semibold rounded-lg",
                     job.status === "active" ? "bg-amber-50 text-amber-600 hover:bg-amber-100" : "bg-green-50 text-green-600 hover:bg-green-100")}>
-                  {job.status === "active" ? "Pause" : "Start"}
+                  {job.status === "active" ? "Tạm dừng" : "Bắt đầu"}
                 </button>
               </div>
             </div>

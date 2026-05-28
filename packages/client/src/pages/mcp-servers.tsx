@@ -15,7 +15,7 @@ export default function McpServers() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">MCP Servers</h1>
-          <p className="text-gray-500">Model Context Protocol — {servers.filter((s: any) => s.status === "running").length} running</p>
+          <p className="text-gray-500">Model Context Protocol — {servers.filter((s: any) => s.status === "đang chạy").length} running</p>
         </div>
         <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2">
           <Plus size={18} /> Add Server
@@ -45,8 +45,8 @@ export default function McpServers() {
                     <span className="flex items-center gap-1"><Wrench size={12} /> {srv.toolCount} tools</span>
                   </div>
                 </div>
-                <button className={`px-3 py-1.5 text-sm rounded-lg ${srv.status === "running" ? "bg-red-50 text-red-500 hover:bg-red-100" : "bg-green-50 text-green-500 hover:bg-green-100"}`}>
-                  {srv.status === "running" ? "Stop" : "Start"}
+                <button className={`px-3 py-1.5 text-sm rounded-lg ${srv.status === "đang chạy" ? "bg-red-50 text-red-500 hover:bg-red-100" : "bg-green-50 text-green-500 hover:bg-green-100"}`}>
+                  {srv.status === "đang chạy" ? "Dừng" : "Bắt đầu"}
                 </button>
               </div>
             </div>

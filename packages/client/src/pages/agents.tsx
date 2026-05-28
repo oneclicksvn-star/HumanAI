@@ -144,7 +144,7 @@ export default function Agents() {
     <div className="p-7 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Agents</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Nhân vật AI</h1>
           <p className="text-sm text-gray-400 mt-0.5">{(agents ?? []).length} agents registered</p>
         </div>
         <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2.5 rounded-2xl shadow-[0_4px_12px_rgba(99,102,241,0.4)] hover:bg-indigo-700 transition-colors">
@@ -158,8 +158,8 @@ export default function Agents() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm overflow-hidden">
             {/* Mode Toggle */}
             <div className="flex items-center gap-2 mb-5">
-              <button onClick={() => setCreateMode("template")} className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all", createMode === "template" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>From Template</button>
-              <button onClick={() => setCreateMode("custom")} className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all", createMode === "custom" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>Custom Agent</button>
+              <button onClick={() => setCreateMode("template")} className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all", createMode === "template" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>Từ mẫu</button>
+              <button onClick={() => setCreateMode("custom")} className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all", createMode === "custom" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>Agent tùy chỉnh</button>
             </div>
 
             {createMode === "template" ? (
@@ -178,7 +178,7 @@ export default function Agents() {
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Identity</h4>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Danh tính</h4>
                   <div className="flex gap-2">
                     <div className="w-16">
                       <label className="text-[10px] text-gray-400">Emoji</label>
@@ -190,42 +190,42 @@ export default function Agents() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-gray-400">Purpose</label>
+                    <label className="text-[10px] text-gray-400">Mục đích</label>
                     <input value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} placeholder="What does this agent do?" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   </div>
                   <div>
-                    <label className="text-[10px] text-gray-400">Description</label>
+                    <label className="text-[10px] text-gray-400">Mô tả</label>
                     <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder={DESCRIPTION_HINTS[form.nature] ?? "Detailed description..."} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-16 resize-none" />
                     <p className="text-[9px] text-gray-300 mt-0.5">{DESCRIPTION_HINTS[form.nature] ?? ""}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] text-gray-400">Nature</label>
+                      <label className="text-[10px] text-gray-400">Tính cách</label>
                       <select value={form.nature} onChange={e => setForm({ ...form, nature: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                        <option value="analytical">Analytical</option>
-                        <option value="creative">Creative</option>
-                        <option value="technical">Technical</option>
-                        <option value="strategic">Strategic</option>
-                        <option value="nurturing">Nurturing</option>
-                        <option value="social">Social</option>
+                        <option value="analytical">Phân tích</option>
+                        <option value="creative">Sáng tạo</option>
+                        <option value="technical">Kỹ thuật</option>
+                        <option value="strategic">Chiến lược</option>
+                        <option value="nurturing">Chăm sóc</option>
+                        <option value="social">Xã hội</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400">Vibe</label>
+                      <label className="text-[10px] text-gray-400">Phong cách</label>
                       <select value={form.vibe} onChange={e => setForm({ ...form, vibe: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                        <option value="warm">Warm</option>
-                        <option value="pragmatic">Pragmatic</option>
-                        <option value="confident">Confident</option>
-                        <option value="wise">Wise</option>
-                        <option value="playful">Playful</option>
-                        <option value="calm">Calm</option>
+                        <option value="warm">Ấm áp</option>
+                        <option value="pragmatic">Thực tế</option>
+                        <option value="confident">Tự tin</option>
+                        <option value="wise">Thông thái</option>
+                        <option value="playful">Vui tươi</option>
+                        <option value="calm">Bình tĩnh</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">LLM Configuration</h4>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Cấu hình LLM</h4>
                   <div>
                     <label className="text-[10px] text-gray-400">Provider</label>
                     <select value={form.providerId} onChange={e => setForm({ ...form, providerId: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
@@ -245,23 +245,23 @@ export default function Agents() {
                         ))}
                       </select>
                     ) : (
-                      <input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder={form.providerId ? "No models found — type model ID" : "Select provider first, or type model ID"} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                      <input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder={form.providerId ? "Không tìm thấy model — nhập ID model" : "Select provider first, or type model ID"} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                     )}
                   </div>
                   <div>
-                    <label className="text-[10px] text-gray-400">Thinking Level</label>
+                    <label className="text-[10px] text-gray-400">Mức suy nghĩ</label>
                     <select value={form.thinkingLevel} onChange={e => setForm({ ...form, thinkingLevel: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                      <option value="off">Off</option>
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
+                      <option value="off">Tắt</option>
+                      <option value="low">Thấp</option>
+                      <option value="medium">Trung bình</option>
+                      <option value="high">Cao</option>
                     </select>
                   </div>
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] text-gray-400">System Prompt</label>
+                      <label className="text-[10px] text-gray-400">Prompt hệ thống</label>
                       <button type="button" onClick={() => setShowPromptTemplates(!showPromptTemplates)} className="flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 transition-colors">
-                        <Lightbulb size={10} /> {showPromptTemplates ? "Hide" : "Use template"}
+                        <Lightbulb size={10} /> {showPromptTemplates ? "Ẩn" : "Dùng mẫu"}
                       </button>
                     </div>
                     {showPromptTemplates && (
@@ -292,7 +292,7 @@ export default function Agents() {
 
                 {/* ─── Description Presets (Pills) ─── */}
                 <div className="col-span-2">
-                  <label className="text-[10px] text-gray-400 mb-1 block">Description Presets</label>
+                  <label className="text-[10px] text-gray-400 mb-1 block">Mẫu mô tả</label>
                   <div className="flex flex-wrap gap-1.5">
                     {DESCRIPTION_PRESETS.map(p => (
                       <button key={p.label} type="button" onClick={() => setForm({ ...form, description: p.prompt })} className="text-[10px] px-2.5 py-1 rounded-full border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
@@ -304,7 +304,7 @@ export default function Agents() {
 
                 {/* ─── System Prompt Mode (4 cards) ─── */}
                 <div className="col-span-2">
-                  <label className="text-[10px] text-gray-400 mb-1.5 block">System Prompt Mode</label>
+                  <label className="text-[10px] text-gray-400 mb-1.5 block">Chế độ Prompt</label>
                   <div className="grid grid-cols-4 gap-2">
                     {PROMPT_MODES.map(mode => {
                       const Icon = mode.icon;
@@ -325,7 +325,7 @@ export default function Agents() {
                 <div className="col-span-2 flex items-center gap-4 rounded-lg border border-gray-100 px-4 py-3">
                   <Sparkles size={16} className="text-orange-500 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-700">Self-Evolution</p>
+                    <p className="text-xs font-medium text-gray-700">Tự tiến hóa</p>
                     <p className="text-[9px] text-gray-400">Agent tự cải tiến personality và skills qua thời gian</p>
                   </div>
                   <button type="button" onClick={() => setForm({ ...form, selfEvolve: !form.selfEvolve })} className={cn("w-10 h-5 rounded-full transition-colors relative", form.selfEvolve ? "bg-orange-500" : "bg-gray-200")}>
@@ -337,7 +337,7 @@ export default function Agents() {
                 <div className="col-span-2">
                   <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-[11px] text-gray-500 hover:text-indigo-600 transition-colors">
                     <Settings2 size={12} />
-                    <span>{showAdvanced ? "Hide" : "Show"} Advanced Settings</span>
+                    <span>{showAdvanced ? "Ẩn" : "Hiện"} Advanced Settings</span>
                     <span className="text-[9px] text-gray-300">(Budget, Memory, Dreaming)</span>
                   </button>
                   {showAdvanced && (
@@ -347,11 +347,11 @@ export default function Agents() {
                         <h5 className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><DollarSign size={10} /> Model & Budget</h5>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-[9px] text-gray-400">Context Window</label>
+                            <label className="text-[9px] text-gray-400">Cửa sổ ngữ cảnh</label>
                             <input type="number" value={form.contextWindow} onChange={e => setForm({ ...form, contextWindow: Number(e.target.value) || 128000 })} className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs" />
                           </div>
                           <div>
-                            <label className="text-[9px] text-gray-400">Max Tool Iterations</label>
+                            <label className="text-[9px] text-gray-400">Số lần tool tối đa</label>
                             <input type="number" value={form.maxToolIterations} onChange={e => setForm({ ...form, maxToolIterations: Number(e.target.value) || 10 })} className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs" />
                           </div>
                         </div>
@@ -361,14 +361,14 @@ export default function Agents() {
                             <span className="text-xs text-gray-400">$</span>
                             <input type="number" min="0" step="0.01" value={form.budgetDollars} onChange={e => setForm({ ...form, budgetDollars: e.target.value })} placeholder="0.00" className="w-32 px-2 py-1.5 border border-gray-200 rounded-lg text-xs" />
                           </div>
-                          <p className="text-[8px] text-gray-300 mt-0.5">Leave empty for unlimited</p>
+                          <p className="text-[8px] text-gray-300 mt-0.5">Để trống nếu không giới hạn</p>
                         </div>
                       </div>
                       {/* Skill Evolution */}
                       <div className="space-y-2">
                         <h5 className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><Brain size={10} /> Learning</h5>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-gray-600">Skill Learning</span>
+                          <span className="text-[10px] text-gray-600">Học kỹ năng</span>
                           <button type="button" onClick={() => setForm({ ...form, skillEvolve: !form.skillEvolve })} className={cn("w-8 h-4 rounded-full transition-colors relative", form.skillEvolve ? "bg-amber-500" : "bg-gray-200")}>
                             <div className={cn("w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm", form.skillEvolve ? "translate-x-4" : "translate-x-0.5")} />
                           </button>
@@ -380,8 +380,8 @@ export default function Agents() {
                 </div>
 
                 <div className="col-span-2 flex justify-end gap-2 pt-2 border-t border-gray-100">
-                  <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200">Cancel</button>
-                  <button onClick={handleCreateCustom} disabled={!form.name.trim()} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed">Create Agent</button>
+                  <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200">Hủy</button>
+                  <button onClick={handleCreateCustom} disabled={!form.name.trim()} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed">Tạo Agent</button>
                 </div>
               </div>
             )}
@@ -393,7 +393,7 @@ export default function Agents() {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 flex-1 max-w-xs">
           <Search size={14} className="text-gray-400" />
-          <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search agents..." className="text-sm outline-none flex-1 bg-transparent" />
+          <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Tìm agent..." className="text-sm outline-none flex-1 bg-transparent" />
         </div>
       </div>
 
@@ -434,7 +434,7 @@ export default function Agents() {
                 <div className="h-full rounded-full transition-all" style={{ width: `${(a.xp / Math.max(a.xpNext, 1)) * 100}%`, background: MOOD_COLORS[a.mood] ?? "#6366f1" }} />
               </div>
               <div className="flex items-center justify-between text-[10px]">
-                <span className="text-gray-400">Energy</span>
+                <span className="text-gray-400">Năng lượng</span>
                 <span className="font-semibold text-gray-600">{a.energy}%</span>
               </div>
             </div>

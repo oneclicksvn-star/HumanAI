@@ -2,24 +2,24 @@ import { useSkills, useAgents } from "@/hooks/useApi";
 import { Sparkles, Search, Star } from "lucide-react";
 import { useState } from "react";
 
-const CATEGORIES = ["All", "language", "code", "strategy", "ethics", "data", "creative"];
+const CATEGORIES = ["Tất cả", "language", "code", "strategy", "ethics", "data", "creative"];
 
 export default function Skills() {
   const { data: skills = [] } = useSkills();
   const { data: agents = [] } = useAgents();
-  const [cat, setCat] = useState("All");
+  const [cat, setCat] = useState("Tất cả");
   const [search, setSearch] = useState("");
 
   const agentMap = Object.fromEntries(agents.map((a: any) => [a.id, a]));
   const filtered = skills
-    .filter((s: any) => cat === "All" || s.category === cat)
+    .filter((s: any) => cat === "Tất cả" || s.category === cat)
     .filter((s: any) => s.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Skills</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Kỹ năng</h1>
           <p className="text-gray-500">{skills.length} skills across all agents</p>
         </div>
         <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2">
@@ -31,7 +31,7 @@ export default function Skills() {
       <div className="flex items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search skills..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm kỹ năng..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
         </div>
         <div className="flex gap-1">
           {CATEGORIES.map((c) => (
@@ -62,7 +62,7 @@ export default function Skills() {
               )}
               <div className="mb-2">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">Mastery</span>
+                  <span className="text-gray-500">Thành thạo</span>
                   <span className="font-medium">{skill.mastery}%</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">

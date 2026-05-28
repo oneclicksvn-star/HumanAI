@@ -39,7 +39,7 @@ export default function Sessions() {
     <div className="p-7 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Phiên làm việc</h1>
           <p className="text-sm text-gray-400 mt-0.5">{(sessions ?? []).length} total · {totalMessages} messages · {todaySessions} today</p>
         </div>
         <Link href="/chat">
@@ -53,11 +53,11 @@ export default function Sessions() {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search sessions..."
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm phiên..."
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-indigo-300" />
         </div>
         <div className="flex gap-1.5">
-          <button onClick={() => setAgentFilter(null)} className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold", !agentFilter ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600")}>All</button>
+          <button onClick={() => setAgentFilter(null)} className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold", !agentFilter ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600")}>Tất cả</button>
           {(agents ?? []).map(a => (
             <button key={a.id} onClick={() => setAgentFilter(a.id)} className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1", agentFilter === a.id ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600")}>
               {a.emoji} {a.name}
@@ -69,10 +69,10 @@ export default function Sessions() {
       {/* Stats cards */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Active", value: active.length, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-          { label: "Archived", value: archived.length, color: "text-gray-500 bg-gray-50 border-gray-100" },
+          { label: "Hoạt động", value: active.length, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+          { label: "Đã lưu trữ", value: archived.length, color: "text-gray-500 bg-gray-50 border-gray-100" },
           { label: "Messages", value: totalMessages, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
-          { label: "Today", value: todaySessions, color: "text-amber-600 bg-amber-50 border-amber-100" },
+          { label: "Hôm nay", value: todaySessions, color: "text-amber-600 bg-amber-50 border-amber-100" },
         ].map(s => (
           <div key={s.label} className={cn("rounded-xl border p-3", s.color)}>
             <p className="text-xl font-bold">{s.value}</p>
@@ -87,8 +87,8 @@ export default function Sessions() {
         {active.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
             <MessageSquare size={28} className="text-gray-200 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">No active sessions</p>
-            <p className="text-xs text-gray-300 mt-1">Start a new chat to create a session</p>
+            <p className="text-sm text-gray-400">Không có phiên hoạt động</p>
+            <p className="text-xs text-gray-300 mt-1">Bắt đầu chat mới để tạo phiên</p>
           </div>
         )}
         {active.map(s => (
@@ -101,10 +101,10 @@ export default function Sessions() {
               <p className="text-[11px] text-gray-400">{s.agent?.name ?? "Agent"} · {timeAgo(s.updatedAt)} · {s.messageCount} messages</p>
             </div>
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => handleArchive(s.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-amber-500 hover:bg-amber-50" title="Archive">
+              <button onClick={() => handleArchive(s.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-amber-500 hover:bg-amber-50" title="Lưu trữ">
                 <Archive size={13} />
               </button>
-              <button onClick={() => handleDelete(s.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50" title="Delete">
+              <button onClick={() => handleDelete(s.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50" title="Xóa">
                 <Trash2 size={13} />
               </button>
             </div>
@@ -130,7 +130,7 @@ export default function Sessions() {
                 <p className="text-sm font-semibold text-gray-600 truncate">{s.title}</p>
                 <p className="text-[11px] text-gray-400">{s.agent?.name ?? "Agent"} · {timeAgo(s.updatedAt)} · {s.messageCount} msgs</p>
               </div>
-              <button onClick={() => handleDelete(s.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100" title="Delete">
+              <button onClick={() => handleDelete(s.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100" title="Xóa">
                 <Trash2 size={13} />
               </button>
             </div>

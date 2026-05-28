@@ -8,7 +8,7 @@ const TABS = [
   { id: "timeline", label: "Timeline", icon: Brain },
   { id: "search", label: "Search", icon: Search },
   { id: "graph", label: "Knowledge Graph", icon: Network },
-  { id: "skills", label: "Skills", icon: Zap },
+  { id: "skills", label: "Kỹ năng", icon: Zap },
   { id: "dreams", label: "Dreams", icon: Moon },
   { id: "consolidation", label: "Consolidation", icon: RefreshCw },
 ];
@@ -106,11 +106,11 @@ export default function Memory() {
     <div className="p-7 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Memory Palace</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Kho ký ức</h1>
           <p className="text-sm text-gray-400 mt-0.5">{(memories ?? []).length} memories stored</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setAgentFilter(undefined)} className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all", !agentFilter ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600")}>All</button>
+          <button onClick={() => setAgentFilter(undefined)} className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all", !agentFilter ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600")}>Tất cả</button>
           {(agents ?? []).map(a => (
             <button key={a.id} onClick={() => setAgentFilter(a.id)} className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all", agentFilter === a.id ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600")}>
               {a.emoji} {a.name}
@@ -162,7 +162,7 @@ export default function Memory() {
                     <button onClick={() => handleRecall(m.id)} className="text-[9px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center gap-1" title="Recall (boost importance +10%)">
                       <RotateCcw size={9} /> Recall
                     </button>
-                    <button onClick={() => handleDeleteMemory(m.id)} className="text-[9px] px-2 py-0.5 rounded bg-red-50 text-red-400 hover:bg-red-100 flex items-center gap-1" title="Delete">
+                    <button onClick={() => handleDeleteMemory(m.id)} className="text-[9px] px-2 py-0.5 rounded bg-red-50 text-red-400 hover:bg-red-100 flex items-center gap-1" title="Xóa">
                       <Trash2 size={9} />
                     </button>
                   </div>
@@ -239,7 +239,7 @@ export default function Memory() {
       {tab === "graph" && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm min-h-[400px]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-700">Knowledge Graph</h3>
+            <h3 className="text-sm font-bold text-gray-700">Đồ thị tri thức</h3>
             <span className="text-[10px] text-gray-400">{(kg?.nodes ?? []).length} nodes · {(kg?.edges ?? []).length} edges</span>
           </div>
           <div className="relative w-full h-[350px]">
@@ -277,7 +277,7 @@ export default function Memory() {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-gray-400">Mastery</span>
+                    <span className="text-gray-400">Thành thạo</span>
                     <span className="font-bold text-indigo-600">{s.mastery}%</span>
                   </div>
                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -344,7 +344,7 @@ export default function Memory() {
           {consolidationResult && (
             <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-xs font-bold text-gray-700">Consolidation Result</h4>
+                <h4 className="text-xs font-bold text-gray-700">Kết quả tổng hợp</h4>
                 <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-semibold", consolidationResult.status === "completed" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
                   {consolidationResult.status}
                 </span>
@@ -352,15 +352,15 @@ export default function Memory() {
               <div className="grid grid-cols-4 gap-3">
                 <div className="bg-emerald-50 rounded-lg p-3 text-center">
                   <p className="text-lg font-bold text-emerald-700">{consolidationResult.episodic.memoriesCreated}</p>
-                  <p className="text-[9px] text-emerald-500">Memories Created</p>
+                  <p className="text-[9px] text-emerald-500">Ký ức đã tạo</p>
                 </div>
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
                   <p className="text-lg font-bold text-blue-700">{consolidationResult.semantic.entitiesExtracted}</p>
-                  <p className="text-[9px] text-blue-500">Entities Extracted</p>
+                  <p className="text-[9px] text-blue-500">Thực thể đã trích xuất</p>
                 </div>
                 <div className="bg-violet-50 rounded-lg p-3 text-center">
                   <p className="text-lg font-bold text-violet-700">{consolidationResult.dreaming.dreamsGenerated}</p>
-                  <p className="text-[9px] text-violet-500">Dreams Generated</p>
+                  <p className="text-[9px] text-violet-500">Giấc mơ đã tạo</p>
                 </div>
                 <div className="bg-orange-50 rounded-lg p-3 text-center">
                   <p className="text-lg font-bold text-orange-700">{consolidationResult.dreaming.xpGranted}</p>
@@ -370,7 +370,7 @@ export default function Memory() {
 
               {consolidationResult.dreaming.personalityUpdates.length > 0 && (
                 <div className="mt-3 p-3 bg-indigo-50 rounded-lg">
-                  <p className="text-[10px] font-bold text-indigo-700 mb-1">Personality Evolution</p>
+                  <p className="text-[10px] font-bold text-indigo-700 mb-1">Tiến hóa tính cách</p>
                   {consolidationResult.dreaming.personalityUpdates.map((u, i) => (
                     <p key={i} className="text-[10px] text-indigo-600">
                       {u.trait} → {u.direction === "increase" ? "↑" : "↓"} ({u.direction})
@@ -390,26 +390,26 @@ export default function Memory() {
 
           {/* Pipeline Explanation */}
           <div className="bg-gray-50 rounded-xl p-5 space-y-3">
-            <h4 className="text-xs font-bold text-gray-600">How it works</h4>
+            <h4 className="text-xs font-bold text-gray-600">Cách hoạt động</h4>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
                   <div className="w-5 h-5 rounded-full bg-emerald-200 flex items-center justify-center text-[9px] font-bold text-emerald-700">1</div>
-                  <span className="text-[10px] font-bold text-gray-700">Episodic Worker</span>
+                  <span className="text-[10px] font-bold text-gray-700">Bộ xử lý sự kiện</span>
                 </div>
                 <p className="text-[9px] text-gray-500">Extracts memories from chat. Tags emotions, scores importance (decisions/code/personal = high).</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
                   <div className="w-5 h-5 rounded-full bg-blue-200 flex items-center justify-center text-[9px] font-bold text-blue-700">2</div>
-                  <span className="text-[10px] font-bold text-gray-700">Semantic Worker</span>
+                  <span className="text-[10px] font-bold text-gray-700">Bộ xử lý ngữ nghĩa</span>
                 </div>
                 <p className="text-[9px] text-gray-500">Builds knowledge graph from entities. Deduplicates similar memories. Creates relations.</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
                   <div className="w-5 h-5 rounded-full bg-violet-200 flex items-center justify-center text-[9px] font-bold text-violet-700">3</div>
-                  <span className="text-[10px] font-bold text-gray-700">Dreaming Worker</span>
+                  <span className="text-[10px] font-bold text-gray-700">Bộ xử lý mơ</span>
                 </div>
                 <p className="text-[9px] text-gray-500">Consolidates insights into dreams. Evolves personality traits. Grants XP for growth.</p>
               </div>

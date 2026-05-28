@@ -21,7 +21,7 @@ export default function Vault() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vault</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Kho lưu trữ</h1>
           <p className="text-gray-500">{docs.length} documents stored</p>
         </div>
         <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function Vault() {
       <div className="flex gap-6">
         {/* Folder Sidebar */}
         <div className="w-48 flex-shrink-0">
-          <h3 className="text-xs font-medium text-gray-400 uppercase mb-2">Folders</h3>
+          <h3 className="text-xs font-medium text-gray-400 uppercase mb-2">Thư mục</h3>
           <div className="space-y-1">
             <button onClick={() => setFolder(null)} className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${!folder ? "bg-indigo-50 text-indigo-600" : "text-gray-600 hover:bg-gray-50"}`}>
               <FolderOpen size={16} /> All Files

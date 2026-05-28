@@ -22,7 +22,7 @@ export default function Logs() {
     <div className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Logs</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Nhật ký</h1>
           <p className="text-gray-500">{logs.length} log entries</p>
         </div>
         <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export default function Logs() {
               </div>
             );
           })}
-          {logs.length === 0 && <div className="text-gray-600 text-center py-8">No logs found</div>}
+          {logs.length === 0 && <div className="text-gray-600 text-center py-8">Không tìm thấy nhật ký</div>}
         </div>
       </div>
     </div>

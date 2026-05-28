@@ -10,7 +10,7 @@ export default function Backup() {
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Backup & Restore</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Sao lưu & Khôi phục</h1>
           <p className="text-gray-500">{backups.length} backups stored</p>
         </div>
         <div className="flex gap-2">
@@ -28,17 +28,17 @@ export default function Backup() {
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <HardDrive size={20} className="text-indigo-500 mb-2" />
           <div className="text-2xl font-bold text-gray-900">{(backups.reduce((s: number, b: any) => s + b.size, 0) / 1024).toFixed(0)} KB</div>
-          <div className="text-sm text-gray-500">Total Backup Size</div>
+          <div className="text-sm text-gray-500">Tổng dung lượng sao lưu</div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <Database size={20} className="text-green-500 mb-2" />
           <div className="text-2xl font-bold text-gray-900">{backups.length}</div>
-          <div className="text-sm text-gray-500">Total Backups</div>
+          <div className="text-sm text-gray-500">Tổng bản sao lưu</div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <Clock size={20} className="text-amber-500 mb-2" />
-          <div className="text-2xl font-bold text-gray-900">{backups[0] ? new Date(backups[0].createdAt).toLocaleDateString() : "Never"}</div>
-          <div className="text-sm text-gray-500">Last Backup</div>
+          <div className="text-2xl font-bold text-gray-900">{backups[0] ? new Date(backups[0].createdAt).toLocaleDateString() : "Không bao giờ"}</div>
+          <div className="text-sm text-gray-500">Sao lưu gần nhất</div>
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export default function Backup() {
               </div>
               <div className="flex gap-2">
                 <button className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-1"><Download size={14} /> Download</button>
-                <button className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">Restore</button>
+                <button className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">Khôi phục</button>
               </div>
             </div>
           </div>

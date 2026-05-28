@@ -19,7 +19,7 @@ export default function ApiKeysPage() {
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
         <Shield size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
         <div>
-          <div className="font-medium text-amber-800">Security Notice</div>
+          <div className="font-medium text-amber-800">Lưu ý bảo mật</div>
           <div className="text-sm text-amber-700">API keys grant access to your HumanCore AI instance. Keep them secret and rotate regularly.</div>
         </div>
       </div>
@@ -35,7 +35,7 @@ export default function ApiKeysPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-gray-900">{key.name}</span>
                   <span className={`px-2 py-0.5 text-[10px] rounded-full ${key.isActive ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                    {key.isActive ? "Active" : "Revoked"}
+                    {key.isActive ? "Hoạt động" : "Revoked"}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-1">

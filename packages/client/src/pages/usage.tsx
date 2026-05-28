@@ -17,7 +17,7 @@ export default function Usage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Usage & Costs</h1>
-          <p className="text-gray-500">Token and cost breakdown by provider and agent</p>
+          <p className="text-gray-500">Phân tích token và chi phí theo provider và agent</p>
         </div>
       </div>
 
@@ -26,7 +26,7 @@ export default function Usage() {
         {[
           { label: "Total Tokens", value: totalTokens.toLocaleString(), icon: Zap, color: "text-indigo-500" },
           { label: "Total Cost", value: `$${totalCost.toFixed(4)}`, icon: DollarSign, color: "text-green-500" },
-          { label: "API Calls", value: totalCalls.toLocaleString(), icon: Activity, color: "text-blue-500" },
+          { label: "Số lần gọi API", value: totalCalls.toLocaleString(), icon: Activity, color: "text-blue-500" },
           { label: "Avg Cost/Call", value: totalCalls > 0 ? `$${(totalCost / totalCalls).toFixed(4)}` : "$0", icon: BarChart3, color: "text-amber-500" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
@@ -40,7 +40,7 @@ export default function Usage() {
       <div className="grid grid-cols-2 gap-6">
         {/* By Agent */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Usage by Agent</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Sử dụng theo Agent</h2>
           <div className="space-y-4">
             {byAgent.map((row: any) => {
               const agent = agentMap[row.agentId];
@@ -66,7 +66,7 @@ export default function Usage() {
 
         {/* By Model */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Usage by Model</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Sử dụng theo Model</h2>
           <div className="space-y-4">
             {byModel.map((row: any, i: number) => {
               const colors = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];

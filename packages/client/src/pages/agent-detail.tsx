@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const STAGE_COLORS: Record<string, string> = { infant: "#60a5fa", child: "#34d399", teen: "#f59e0b", adult: "#f97316", expert: "#ef4444", mentor: "#8b5cf6" };
-const TABS = ["Overview", "Configuration", "Personality", "Context Files", "Commitments", "Mood History"] as const;
+const TABS = ["Tổng quan", "Cấu hình", "Tính cách", "Tệp ngữ cảnh", "Cam kết", "Lịch sử cảm xúc"] as const;
 type Tab = typeof TABS[number];
 
 export default function AgentDetail() {
@@ -28,7 +28,7 @@ export default function AgentDetail() {
   const { data: moodHistory } = useMoodHistory(agentId);
   const qc = useQueryClient();
 
-  const [tab, setTab] = useState<Tab>("Overview");
+  const [tab, setTab] = useState<Tab>("Tổng quan");
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, unknown>>({});
   const [savingConfig, setSavingConfig] = useState(false);
@@ -48,8 +48,8 @@ export default function AgentDetail() {
     }
   }, [agent, editing]);
 
-  if (isLoading) return <div className="p-7 text-gray-400">Loading agent...</div>;
-  if (!agent) return <div className="p-7 text-red-500">Agent not found</div>;
+  if (isLoading) return <div className="p-7 text-gray-400">Đang tải agent...</div>;
+  if (!agent) return <div className="p-7 text-red-500">Không tìm thấy Agent</div>;
 
   const handleSaveIdentity = async () => {
     await api.updateAgent(agentId, editForm as any);
@@ -123,11 +123,11 @@ export default function AgentDetail() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-5 gap-3">
-        <StatCard label="Level" value={`${agent.level}`} sub={`${agent.xp}/${agent.xpNext} XP`} icon={<Star size={14} />} />
-        <StatCard label="Energy" value={`${agent.energy}%`} icon={<Zap size={14} />} />
-        <StatCard label="Memories" value={`${profile?.stats.memoriesCount ?? 0}`} icon={<Brain size={14} />} />
-        <StatCard label="Sessions" value={`${profile?.stats.sessionsCount ?? 0}`} icon={<MessageCircle size={14} />} />
-        <StatCard label="Sub-Agents" value={`${profile?.stats.activeSubAgents ?? 0}`} sub={`${profile?.stats.totalSpawns ?? 0} total`} icon={<Sparkles size={14} />} />
+        <StatCard label="Cấp độ" value={`${agent.level}`} sub={`${agent.xp}/${agent.xpNext} XP`} icon={<Star size={14} />} />
+        <StatCard label="Năng lượng" value={`${agent.energy}%`} icon={<Zap size={14} />} />
+        <StatCard label="Ký ức" value={`${profile?.stats.memoriesCount ?? 0}`} icon={<Brain size={14} />} />
+        <StatCard label="Phiên" value={`${profile?.stats.sessionsCount ?? 0}`} icon={<MessageCircle size={14} />} />
+        <StatCard label="Agent con" value={`${profile?.stats.activeSubAgents ?? 0}`} sub={`${profile?.stats.totalSpawns ?? 0} total`} icon={<Sparkles size={14} />} />
       </div>
 
       {/* Tab Navigation */}
@@ -142,12 +142,12 @@ export default function AgentDetail() {
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.15 }}>
-          {tab === "Overview" && <OverviewTab agent={agent} profile={profile!} editing={editing} editForm={editForm} setEditForm={setEditForm} onSave={handleSaveIdentity} onCancel={() => setEditing(false)} />}
-          {tab === "Configuration" && <ConfigTab config={config} providers={providers ?? []} onSave={handleSaveConfig} saving={savingConfig} />}
-          {tab === "Personality" && <PersonalityTab personality={personality} onSave={handleSavePersonality} />}
-          {tab === "Context Files" && <ContextFilesTab files={contextFiles ?? []} editingFile={editingFile} fileContent={fileContent} onOpen={handleOpenFile} onContentChange={setFileContent} onSave={handleSaveFile} onCancel={() => setEditingFile(null)} />}
-          {tab === "Commitments" && <CommitmentsTab commitments={commitments ?? []} agentId={agentId} onRefresh={() => qc.invalidateQueries({ queryKey: ["commitments", agentId] })} />}
-          {tab === "Mood History" && <MoodHistoryTab history={moodHistory ?? []} />}
+          {tab === "Tổng quan" && <OverviewTab agent={agent} profile={profile!} editing={editing} editForm={editForm} setEditForm={setEditForm} onSave={handleSaveIdentity} onCancel={() => setEditing(false)} />}
+          {tab === "Cấu hình" && <ConfigTab config={config} providers={providers ?? []} onSave={handleSaveConfig} saving={savingConfig} />}
+          {tab === "Tính cách" && <PersonalityTab personality={personality} onSave={handleSavePersonality} />}
+          {tab === "Tệp ngữ cảnh" && <ContextFilesTab files={contextFiles ?? []} editingFile={editingFile} fileContent={fileContent} onOpen={handleOpenFile} onContentChange={setFileContent} onSave={handleSaveFile} onCancel={() => setEditingFile(null)} />}
+          {tab === "Cam kết" && <CommitmentsTab commitments={commitments ?? []} agentId={agentId} onRefresh={() => qc.invalidateQueries({ queryKey: ["commitments", agentId] })} />}
+          {tab === "Lịch sử cảm xúc" && <MoodHistoryTab history={moodHistory ?? []} />}
         </motion.div>
       </AnimatePresence>
     </div>
@@ -178,25 +178,25 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
 
           {editing ? (
             <div className="space-y-3">
-              <Field label="Name" value={editForm.name as string} onChange={v => setEditForm({ ...editForm, name: v })} />
+              <Field label="Tên" value={editForm.name as string} onChange={v => setEditForm({ ...editForm, name: v })} />
               <Field label="Emoji" value={editForm.emoji as string} onChange={v => setEditForm({ ...editForm, emoji: v })} />
-              <Field label="Nature" value={editForm.nature as string} onChange={v => setEditForm({ ...editForm, nature: v })} />
-              <Field label="Purpose" value={editForm.purpose as string} onChange={v => setEditForm({ ...editForm, purpose: v })} />
-              <Field label="Vibe" value={editForm.vibe as string} onChange={v => setEditForm({ ...editForm, vibe: v })} />
-              <Field label="Description" value={editForm.description as string} onChange={v => setEditForm({ ...editForm, description: v })} multiline />
-              <Field label="System Prompt" value={editForm.systemPrompt as string} onChange={v => setEditForm({ ...editForm, systemPrompt: v })} multiline />
+              <Field label="Tính cách" value={editForm.nature as string} onChange={v => setEditForm({ ...editForm, nature: v })} />
+              <Field label="Mục đích" value={editForm.purpose as string} onChange={v => setEditForm({ ...editForm, purpose: v })} />
+              <Field label="Phong cách" value={editForm.vibe as string} onChange={v => setEditForm({ ...editForm, vibe: v })} />
+              <Field label="Mô tả" value={editForm.description as string} onChange={v => setEditForm({ ...editForm, description: v })} multiline />
+              <Field label="Prompt hệ thống" value={editForm.systemPrompt as string} onChange={v => setEditForm({ ...editForm, systemPrompt: v })} multiline />
             </div>
           ) : (
             <div className="space-y-2 text-sm">
-              <InfoRow label="Name" value={`${agent.emoji} ${agent.name}`} />
-              <InfoRow label="Nature" value={agent.nature ?? "—"} />
-              <InfoRow label="Purpose" value={agent.purpose ?? "—"} />
-              <InfoRow label="Vibe" value={agent.vibe ?? "—"} />
-              <InfoRow label="Type" value={agent.agentType} />
-              <InfoRow label="Status" value={agent.status} />
-              {agent.agentKey && <InfoRow label="Agent Key" value={agent.agentKey} />}
-              {agent.description && <InfoRow label="Description" value={agent.description} />}
-              {agent.systemPrompt && <InfoRow label="System Prompt" value={agent.systemPrompt.slice(0, 200) + (agent.systemPrompt.length > 200 ? "..." : "")} />}
+              <InfoRow label="Tên" value={`${agent.emoji} ${agent.name}`} />
+              <InfoRow label="Tính cách" value={agent.nature ?? "—"} />
+              <InfoRow label="Mục đích" value={agent.purpose ?? "—"} />
+              <InfoRow label="Phong cách" value={agent.vibe ?? "—"} />
+              <InfoRow label="Loại" value={agent.agentType} />
+              <InfoRow label="Trạng thái" value={agent.status} />
+              {agent.agentKey && <InfoRow label="Mã Agent" value={agent.agentKey} />}
+              {agent.description && <InfoRow label="Mô tả" value={agent.description} />}
+              {agent.systemPrompt && <InfoRow label="Prompt hệ thống" value={agent.systemPrompt.slice(0, 200) + (agent.systemPrompt.length > 200 ? "..." : "")} />}
             </div>
           )}
         </div>
@@ -223,10 +223,10 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
           <div className="space-y-2 text-xs">
             <InfoRow label="Provider" value={agent.providerId ?? "Default"} />
             <InfoRow label="Model" value={agent.model ?? "Default"} />
-            <InfoRow label="Context Window" value={`${(agent.contextWindow ?? 128000).toLocaleString()} tokens`} />
-            <InfoRow label="Max Tool Iterations" value={`${agent.maxToolIterations ?? 10}`} />
-            <InfoRow label="Thinking Level" value={agent.thinkingLevel ?? "off"} />
-            <InfoRow label="Budget" value={agent.budgetMonthlyCents ? `$${(agent.budgetMonthlyCents / 100).toFixed(2)}/month` : "Unlimited"} />
+            <InfoRow label="Cửa sổ ngữ cảnh" value={`${(agent.contextWindow ?? 128000).toLocaleString()} tokens`} />
+            <InfoRow label="Số lần tool tối đa" value={`${agent.maxToolIterations ?? 10}`} />
+            <InfoRow label="Mức suy nghĩ" value={agent.thinkingLevel ?? "off"} />
+            <InfoRow label="Ngân sách" value={agent.budgetMonthlyCents ? `$${(agent.budgetMonthlyCents / 100).toFixed(2)}/month` : "Không giới hạn"} />
           </div>
         </div>
 
@@ -235,12 +235,12 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Sparkles size={14} /> Evolution & Learning</h3>
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-gray-400">Self Evolution</span>
-              <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]", agent.selfEvolve ? "bg-orange-50 text-orange-600" : "bg-gray-50 text-gray-400")}>{agent.selfEvolve ? "Enabled" : "Disabled"}</span>
+              <span className="text-gray-400">Tự tiến hóa</span>
+              <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]", agent.selfEvolve ? "bg-orange-50 text-orange-600" : "bg-gray-50 text-gray-400")}>{agent.selfEvolve ? "Bật" : "Tắt"}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-400">Skill Learning</span>
-              <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]", agent.skillEvolve ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400")}>{agent.skillEvolve ? "Enabled" : "Disabled"}</span>
+              <span className="text-gray-400">Học kỹ năng</span>
+              <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]", agent.skillEvolve ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400")}>{agent.skillEvolve ? "Bật" : "Tắt"}</span>
             </div>
           </div>
         </div>
@@ -249,9 +249,9 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Shield size={14} /> Tool Policy</h3>
           <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2"><span className="text-gray-400 w-24">Allow List</span><span className="text-gray-700">{agent.toolsConfig?.allowList?.join(", ") ?? "All tools"}</span></div>
-            <div className="flex items-center gap-2"><span className="text-gray-400 w-24">Deny List</span><span className="text-red-600">{agent.toolsConfig?.denyList?.join(", ") ?? "None"}</span></div>
-            <div className="flex items-center gap-2"><span className="text-gray-400 w-24">Approval</span><span className="text-amber-600">{agent.toolsConfig?.requireApproval?.join(", ") ?? "None"}</span></div>
+            <div className="flex items-center gap-2"><span className="text-gray-400 w-24">Danh sách cho phép</span><span className="text-gray-700">{agent.toolsConfig?.allowList?.join(", ") ?? "Tất cả công cụ"}</span></div>
+            <div className="flex items-center gap-2"><span className="text-gray-400 w-24">Danh sách cấm</span><span className="text-red-600">{agent.toolsConfig?.denyList?.join(", ") ?? "Không có"}</span></div>
+            <div className="flex items-center gap-2"><span className="text-gray-400 w-24">Phê duyệt</span><span className="text-amber-600">{agent.toolsConfig?.requireApproval?.join(", ") ?? "Không có"}</span></div>
           </div>
         </div>
 
@@ -259,16 +259,16 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Target size={14} /> Delegation & Orchestration</h3>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><span className="text-gray-400">Given</span> <span className="font-bold text-gray-700">{profile.stats.delegationsGiven}</span></div>
-            <div><span className="text-gray-400">Received</span> <span className="font-bold text-gray-700">{profile.stats.delegationsReceived}</span></div>
-            <div><span className="text-gray-400">Outbound Links</span> <span className="font-bold text-gray-700">{profile.stats.outboundLinks}</span></div>
-            <div><span className="text-gray-400">Inbound Links</span> <span className="font-bold text-gray-700">{profile.stats.inboundLinks}</span></div>
+            <div><span className="text-gray-400">Đã cho</span> <span className="font-bold text-gray-700">{profile.stats.delegationsGiven}</span></div>
+            <div><span className="text-gray-400">Đã nhận</span> <span className="font-bold text-gray-700">{profile.stats.delegationsReceived}</span></div>
+            <div><span className="text-gray-400">Liên kết đi</span> <span className="font-bold text-gray-700">{profile.stats.outboundLinks}</span></div>
+            <div><span className="text-gray-400">Liên kết đến</span> <span className="font-bold text-gray-700">{profile.stats.inboundLinks}</span></div>
           </div>
           {agent.subagentsConfig && (
             <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5 text-xs">
-              <InfoRow label="Max Concurrent" value={`${agent.subagentsConfig.maxConcurrent ?? 4}`} />
-              <InfoRow label="Max Depth" value={`${agent.subagentsConfig.maxSpawnDepth ?? 3}`} />
-              <InfoRow label="Max Children" value={`${agent.subagentsConfig.maxChildrenPerAgent ?? 8}`} />
+              <InfoRow label="Đồng thời tối đa" value={`${agent.subagentsConfig.maxConcurrent ?? 4}`} />
+              <InfoRow label="Độ sâu tối đa" value={`${agent.subagentsConfig.maxSpawnDepth ?? 3}`} />
+              <InfoRow label="Agent con tối đa" value={`${agent.subagentsConfig.maxChildrenPerAgent ?? 8}`} />
             </div>
           )}
         </div>
@@ -277,10 +277,10 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><Brain size={14} /> Memory</h3>
           <div className="space-y-2 text-xs">
-            <InfoRow label="Total Memories" value={`${profile.stats.memoriesCount ?? 0}`} />
-            <InfoRow label="Auto Extract" value={agent.memoryConfig?.autoExtract !== false ? "Yes" : "No"} />
-            {agent.memoryConfig?.maxResults && <InfoRow label="Max Results" value={`${agent.memoryConfig.maxResults}`} />}
-            {agent.memoryConfig?.vectorWeight && <InfoRow label="Vector Weight" value={`${agent.memoryConfig.vectorWeight}`} />}
+            <InfoRow label="Tổng ký ức" value={`${profile.stats.memoriesCount ?? 0}`} />
+            <InfoRow label="Tự trích xuất" value={agent.memoryConfig?.autoExtract !== false ? "Có" : "Không"} />
+            {agent.memoryConfig?.maxResults && <InfoRow label="Kết quả tối đa" value={`${agent.memoryConfig.maxResults}`} />}
+            {agent.memoryConfig?.vectorWeight && <InfoRow label="Trọng số Vector" value={`${agent.memoryConfig.vectorWeight}`} />}
           </div>
         </div>
       </div>
@@ -328,7 +328,7 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {/* LLM Config */}
-      <ConfigSection title="LLM Configuration" icon={<Brain size={14} />} editing={editSection === "llm"} onEdit={() => startEdit("llm", config.llm)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+      <ConfigSection title="Cấu hình LLM" icon={<Brain size={14} />} editing={editSection === "llm"} onEdit={() => startEdit("llm", config.llm)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "llm" ? (
           <div className="space-y-3">
             <SelectField label="Provider" value={form.providerId as string ?? ""} onChange={v => setForm({ ...form, providerId: v || null, model: null })} options={[{ value: "", label: "Default" }, ...providers.map((p: any) => ({ value: p.id.toString(), label: p.name }))]} />
@@ -339,7 +339,7 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
               {availableModels.length > 0 ? (
                 <select value={form.model as string ?? ""} onChange={e => setForm({ ...form, model: e.target.value || null })}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-indigo-300">
-                  <option value="">Select model...</option>
+                  <option value="">Chọn model...</option>
                   {availableModels.map(m => (
                     <option key={m.id} value={m.id}>
                       {m.name} {m.reasoning ? "🧠" : ""}{m.vision ? "👁" : ""}{m.contextWindow ? ` (${(m.contextWindow / 1000).toFixed(0)}K)` : ""}
@@ -348,28 +348,28 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
                 </select>
               ) : (
                 <input value={form.model as string ?? ""} onChange={e => setForm({ ...form, model: e.target.value || null })}
-                  placeholder={form.providerId ? "No models found — type model ID" : "Select provider first"}
+                  placeholder={form.providerId ? "Không tìm thấy model — nhập ID model" : "Chọn Provider trước"}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-indigo-300" />
               )}
             </div>
-            <NumberField label="Temperature" value={form.temperature as number ?? 0.7} onChange={v => setForm({ ...form, temperature: v })} min={0} max={2} step={0.1} />
-            <NumberField label="Max Tokens" value={form.maxTokens as number ?? 4096} onChange={v => setForm({ ...form, maxTokens: v })} min={256} max={200000} step={256} />
-            <SelectField label="Thinking Level" value={form.thinkingLevel as string ?? "off"} onChange={v => setForm({ ...form, thinkingLevel: v })} options={[{ value: "off", label: "Off" }, { value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }]} />
+            <NumberField label="Nhiệt độ" value={form.temperature as number ?? 0.7} onChange={v => setForm({ ...form, temperature: v })} min={0} max={2} step={0.1} />
+            <NumberField label="Token tối đa" value={form.maxTokens as number ?? 4096} onChange={v => setForm({ ...form, maxTokens: v })} min={256} max={200000} step={256} />
+            <SelectField label="Mức suy nghĩ" value={form.thinkingLevel as string ?? "off"} onChange={v => setForm({ ...form, thinkingLevel: v })} options={[{ value: "off", label: "Off" }, { value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }]} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
             <InfoRow label="Provider" value={config.llm.providerId ? providers.find((p: any) => p.id.toString() === config.llm.providerId)?.name ?? config.llm.providerId : "Default"} />
             <InfoRow label="Model" value={config.llm.model ?? "Default"} />
-            <InfoRow label="Temperature" value={config.llm.temperature?.toString() ?? "0.7"} />
-            <InfoRow label="Max Tokens" value={config.llm.maxTokens?.toString() ?? "4096"} />
-            <InfoRow label="Context Window" value={config.llm.contextWindow.toLocaleString()} />
-            <InfoRow label="Thinking" value={config.llm.thinkingLevel} />
+            <InfoRow label="Nhiệt độ" value={config.llm.temperature?.toString() ?? "0.7"} />
+            <InfoRow label="Token tối đa" value={config.llm.maxTokens?.toString() ?? "4096"} />
+            <InfoRow label="Cửa sổ ngữ cảnh" value={config.llm.contextWindow.toLocaleString()} />
+            <InfoRow label="Suy nghĩ" value={config.llm.thinkingLevel} />
           </div>
         )}
       </ConfigSection>
 
       {/* Tools Config */}
-      <ConfigSection title="Tool Policy" icon={<Shield size={14} />} editing={editSection === "tools"} onEdit={() => startEdit("tools", config.tools)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+      <ConfigSection title="Chính sách Tool" icon={<Shield size={14} />} editing={editSection === "tools"} onEdit={() => startEdit("tools", config.tools)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "tools" ? (
           <div className="space-y-3">
             <Field label="Deny List (comma-separated)" value={(form.denyList as string[] ?? []).join(", ")} onChange={v => setForm({ ...form, denyList: v ? v.split(",").map(s => s.trim()) : null })} placeholder="shell_exec, file_delete" />
@@ -378,9 +378,9 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="Deny List" value={(config.tools.denyList ?? []).join(", ") || "None"} />
-            <InfoRow label="Allow List" value={(config.tools.allowList ?? []).join(", ") || "All tools"} />
-            <InfoRow label="Approval" value={(config.tools.requireApproval ?? []).join(", ") || "None"} />
+            <InfoRow label="Danh sách cấm" value={(config.tools.denyList ?? []).join(", ") || "Không có"} />
+            <InfoRow label="Danh sách cho phép" value={(config.tools.allowList ?? []).join(", ") || "Tất cả công cụ"} />
+            <InfoRow label="Cần phê duyệt" value={(config.tools.requireApproval ?? []).join(", ") || "Không có"} />
           </div>
         )}
       </ConfigSection>
@@ -389,17 +389,17 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
       <ConfigSection title="Sub-Agent Limits" icon={<Sparkles size={14} />} editing={editSection === "subagents"} onEdit={() => startEdit("subagents", config.subagents)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "subagents" ? (
           <div className="space-y-3">
-            <NumberField label="Max Concurrent" value={form.maxConcurrent as number ?? 4} onChange={v => setForm({ ...form, maxConcurrent: v })} min={1} max={20} />
+            <NumberField label="Đồng thời tối đa" value={form.maxConcurrent as number ?? 4} onChange={v => setForm({ ...form, maxConcurrent: v })} min={1} max={20} />
             <NumberField label="Max Spawn Depth" value={form.maxSpawnDepth as number ?? 3} onChange={v => setForm({ ...form, maxSpawnDepth: v })} min={1} max={10} />
-            <NumberField label="Max Children" value={form.maxChildrenPerAgent as number ?? 8} onChange={v => setForm({ ...form, maxChildrenPerAgent: v })} min={1} max={50} />
+            <NumberField label="Agent con tối đa" value={form.maxChildrenPerAgent as number ?? 8} onChange={v => setForm({ ...form, maxChildrenPerAgent: v })} min={1} max={50} />
             <NumberField label="Archive After (min)" value={form.archiveAfterMinutes as number ?? 30} onChange={v => setForm({ ...form, archiveAfterMinutes: v })} min={5} max={1440} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="Max Concurrent" value={config.subagents.maxConcurrent.toString()} />
-            <InfoRow label="Spawn Depth" value={config.subagents.maxSpawnDepth.toString()} />
-            <InfoRow label="Max Children" value={config.subagents.maxChildrenPerAgent.toString()} />
-            <InfoRow label="Archive After" value={`${config.subagents.archiveAfterMinutes} min`} />
+            <InfoRow label="Đồng thời tối đa" value={config.subagents.maxConcurrent.toString()} />
+            <InfoRow label="Độ sâu spawn" value={config.subagents.maxSpawnDepth.toString()} />
+            <InfoRow label="Agent con tối đa" value={config.subagents.maxChildrenPerAgent.toString()} />
+            <InfoRow label="Lưu trữ sau" value={`${config.subagents.archiveAfterMinutes} min`} />
           </div>
         )}
       </ConfigSection>
@@ -408,57 +408,57 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
       <ConfigSection title="Memory Settings" icon={<Brain size={14} />} editing={editSection === "memory"} onEdit={() => startEdit("memory", config.memory)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "memory" ? (
           <div className="space-y-3">
-            <ToggleField label="Auto Extract" value={form.autoExtract as boolean ?? true} onChange={v => setForm({ ...form, autoExtract: v })} />
-            <NumberField label="Max Memories" value={form.maxMemories as number ?? 1000} onChange={v => setForm({ ...form, maxMemories: v })} min={100} max={50000} />
+            <ToggleField label="Tự trích xuất" value={form.autoExtract as boolean ?? true} onChange={v => setForm({ ...form, autoExtract: v })} />
+            <NumberField label="Ký ức tối đa" value={form.maxMemories as number ?? 1000} onChange={v => setForm({ ...form, maxMemories: v })} min={100} max={50000} />
             <NumberField label="Importance Threshold" value={form.importanceThreshold as number ?? 0.3} onChange={v => setForm({ ...form, importanceThreshold: v })} min={0} max={1} step={0.05} />
             <NumberField label="Max Chunk Length" value={form.maxChunkLength as number ?? 2000} onChange={v => setForm({ ...form, maxChunkLength: v })} min={100} max={10000} step={100} />
             <NumberField label="Chunk Overlap" value={form.chunkOverlap as number ?? 200} onChange={v => setForm({ ...form, chunkOverlap: v })} min={0} max={1000} step={50} />
-            <NumberField label="Max Results" value={form.maxResults as number ?? 10} onChange={v => setForm({ ...form, maxResults: v })} min={1} max={50} />
+            <NumberField label="Kết quả tối đa" value={form.maxResults as number ?? 10} onChange={v => setForm({ ...form, maxResults: v })} min={1} max={50} />
             <NumberField label="Min Score" value={form.minScore as number ?? 0.5} onChange={v => setForm({ ...form, minScore: v })} min={0} max={1} step={0.05} />
-            <NumberField label="Vector Weight" value={form.vectorWeight as number ?? 0.6} onChange={v => setForm({ ...form, vectorWeight: v })} min={0} max={1} step={0.1} />
+            <NumberField label="Trọng số Vector" value={form.vectorWeight as number ?? 0.6} onChange={v => setForm({ ...form, vectorWeight: v })} min={0} max={1} step={0.1} />
             <NumberField label="Text Weight" value={form.textWeight as number ?? 0.4} onChange={v => setForm({ ...form, textWeight: v })} min={0} max={1} step={0.1} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="Auto Extract" value={config.memory.autoExtract ? "Yes" : "No"} />
-            <InfoRow label="Max Memories" value={config.memory.maxMemories.toLocaleString()} />
-            <InfoRow label="Importance" value={`≥ ${config.memory.importanceThreshold}`} />
-            <InfoRow label="Chunk Length" value={`${config.memory.maxChunkLength ?? 2000}`} />
-            <InfoRow label="Overlap" value={`${config.memory.chunkOverlap ?? 200}`} />
-            <InfoRow label="Max Results" value={`${config.memory.maxResults ?? 10}`} />
-            <InfoRow label="Vector/Text" value={`${config.memory.vectorWeight ?? 0.6} / ${config.memory.textWeight ?? 0.4}`} />
+            <InfoRow label="Tự trích xuất" value={config.memory.autoExtract ? "Có" : "Không"} />
+            <InfoRow label="Ký ức tối đa" value={config.memory.maxMemories.toLocaleString()} />
+            <InfoRow label="Độ quan trọng" value={`≥ ${config.memory.importanceThreshold}`} />
+            <InfoRow label="Độ dài chunk" value={`${config.memory.maxChunkLength ?? 2000}`} />
+            <InfoRow label="Chồng chéo" value={`${config.memory.chunkOverlap ?? 200}`} />
+            <InfoRow label="Kết quả tối đa" value={`${config.memory.maxResults ?? 10}`} />
+            <InfoRow label="Vector/Văn bản" value={`${config.memory.vectorWeight ?? 0.6} / ${config.memory.textWeight ?? 0.4}`} />
           </div>
         )}
       </ConfigSection>
 
       {/* Behavior */}
-      <ConfigSection title="Behavior" icon={<Settings2 size={14} />} editing={editSection === "behavior"} onEdit={() => startEdit("behavior", config.behavior)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+      <ConfigSection title="Hành vi" icon={<Settings2 size={14} />} editing={editSection === "behavior"} onEdit={() => startEdit("behavior", config.behavior)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "behavior" ? (
           <div className="space-y-3">
-            <ToggleField label="Self Evolve" value={form.selfEvolve as boolean ?? false} onChange={v => setForm({ ...form, selfEvolve: v })} />
-            <ToggleField label="Skill Evolve" value={form.skillEvolve as boolean ?? false} onChange={v => setForm({ ...form, skillEvolve: v })} />
+            <ToggleField label="Tự tiến hóa" value={form.selfEvolve as boolean ?? false} onChange={v => setForm({ ...form, selfEvolve: v })} />
+            <ToggleField label="Tiến hóa kỹ năng" value={form.skillEvolve as boolean ?? false} onChange={v => setForm({ ...form, skillEvolve: v })} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="Self Evolve" value={config.behavior.selfEvolve ? "Enabled" : "Disabled"} />
-            <InfoRow label="Skill Evolve" value={config.behavior.skillEvolve ? "Enabled" : "Disabled"} />
+            <InfoRow label="Tự tiến hóa" value={config.behavior.selfEvolve ? "Bật" : "Tắt"} />
+            <InfoRow label="Tiến hóa kỹ năng" value={config.behavior.skillEvolve ? "Bật" : "Tắt"} />
           </div>
         )}
       </ConfigSection>
 
       {/* Sandbox */}
-      <ConfigSection title="Sandbox" icon={<Shield size={14} />} editing={editSection === "sandbox"} onEdit={() => startEdit("sandbox", config.sandbox)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+      <ConfigSection title="Hộp cát" icon={<Shield size={14} />} editing={editSection === "sandbox"} onEdit={() => startEdit("sandbox", config.sandbox)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "sandbox" ? (
           <div className="space-y-3">
-            <ToggleField label="Enabled" value={form.enabled as boolean ?? false} onChange={v => setForm({ ...form, enabled: v })} />
+            <ToggleField label="Bật" value={form.enabled as boolean ?? false} onChange={v => setForm({ ...form, enabled: v })} />
             <NumberField label="Timeout (ms)" value={form.timeoutMs as number ?? 30000} onChange={v => setForm({ ...form, timeoutMs: v })} min={1000} max={300000} step={1000} />
             <ToggleField label="Allow Network" value={form.allowNetwork as boolean ?? false} onChange={v => setForm({ ...form, allowNetwork: v })} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="Enabled" value={config.sandbox.enabled ? "Yes" : "No"} />
-            <InfoRow label="Timeout" value={`${config.sandbox.timeoutMs}ms`} />
-            <InfoRow label="Network" value={config.sandbox.allowNetwork ? "Allowed" : "Blocked"} />
+            <InfoRow label="Bật" value={config.sandbox.enabled ? "Có" : "Không"} />
+            <InfoRow label="Thời gian chờ" value={`${config.sandbox.timeoutMs}ms`} />
+            <InfoRow label="Mạng" value={config.sandbox.allowNetwork ? "Cho phép" : "Chặn"} />
           </div>
         )}
       </ConfigSection>
@@ -467,23 +467,23 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
       <ConfigSection title="Dreaming (Memory Consolidation)" icon={<Heart size={14} />} editing={editSection === "dreaming"} onEdit={() => startEdit("dreaming", config.dreaming ?? { enabled: false, threshold: 50, debounceMs: 300000, verbose: false })} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "dreaming" ? (
           <div className="space-y-3">
-            <ToggleField label="Enabled" value={form.enabled as boolean ?? false} onChange={v => setForm({ ...form, enabled: v })} />
+            <ToggleField label="Bật" value={form.enabled as boolean ?? false} onChange={v => setForm({ ...form, enabled: v })} />
             <NumberField label="Threshold (memories)" value={form.threshold as number ?? 50} onChange={v => setForm({ ...form, threshold: v })} min={10} max={500} step={10} />
             <NumberField label="Debounce (ms)" value={form.debounceMs as number ?? 300000} onChange={v => setForm({ ...form, debounceMs: v })} min={10000} max={3600000} step={10000} />
             <ToggleField label="Verbose Log" value={form.verbose as boolean ?? false} onChange={v => setForm({ ...form, verbose: v })} />
           </div>
         ) : (
           <div className="space-y-1.5 text-xs">
-            <InfoRow label="Enabled" value={config.dreaming?.enabled ? "Yes" : "No"} />
-            <InfoRow label="Threshold" value={`${config.dreaming?.threshold ?? 50} memories`} />
-            <InfoRow label="Debounce" value={`${((config.dreaming?.debounceMs ?? 300000) / 60000).toFixed(0)} min`} />
-            <InfoRow label="Verbose" value={config.dreaming?.verbose ? "Yes" : "No"} />
+            <InfoRow label="Bật" value={config.dreaming?.enabled ? "Có" : "Không"} />
+            <InfoRow label="Ngưỡng" value={`${config.dreaming?.threshold ?? 50} memories`} />
+            <InfoRow label="Chờ ổn định" value={`${((config.dreaming?.debounceMs ?? 300000) / 60000).toFixed(0)} min`} />
+            <InfoRow label="Verbose" value={config.dreaming?.verbose ? "Có" : "Không"} />
           </div>
         )}
       </ConfigSection>
 
       {/* Prompt Mode Config */}
-      <ConfigSection title="System Prompt Mode" icon={<Zap size={14} />} editing={editSection === "promptMode"} onEdit={() => startEdit("promptMode", { promptMode: config.promptMode ?? "full" })} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
+      <ConfigSection title="Chế độ Prompt" icon={<Zap size={14} />} editing={editSection === "promptMode"} onEdit={() => startEdit("promptMode", { promptMode: config.promptMode ?? "full" })} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "promptMode" ? (
           <div className="space-y-3">
             <SelectField label="Mode" value={form.promptMode as string ?? "full"} onChange={v => setForm({ ...form, promptMode: v })} options={[
@@ -514,11 +514,11 @@ function PersonalityTab({ personality, onSave }: any) {
   if (!personality) return <div className="text-gray-400 text-sm">Loading personality...</div>;
 
   const traits = [
-    { key: "openness", label: "Openness", color: "#6366f1" },
-    { key: "conscientiousness", label: "Conscientiousness", color: "#8b5cf6" },
-    { key: "extraversion", label: "Extraversion", color: "#ec4899" },
-    { key: "agreeableness", label: "Agreeableness", color: "#14b8a6" },
-    { key: "neuroticism", label: "Neuroticism", color: "#f59e0b" },
+    { key: "openness", label: "Cởi mở", color: "#6366f1" },
+    { key: "conscientiousness", label: "Tận tâm", color: "#8b5cf6" },
+    { key: "extraversion", label: "Hướng ngoại", color: "#ec4899" },
+    { key: "agreeableness", label: "Hòa đồng", color: "#14b8a6" },
+    { key: "neuroticism", label: "Nhạy cảm", color: "#f59e0b" },
     { key: "creativity", label: "Creativity", color: "#3b82f6" },
     { key: "empathy", label: "Empathy", color: "#ef4444" },
     { key: "humor", label: "Humor", color: "#22c55e" },
@@ -536,9 +536,9 @@ function PersonalityTab({ personality, onSave }: any) {
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><Heart size={14} /> Big Five + Traits</h3>
         {editing ? (
-          <div className="flex gap-1"><button onClick={handleSave} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700"><Check size={12} className="inline mr-1" />Save</button><button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs hover:bg-gray-200">Cancel</button></div>
+          <div className="flex gap-1"><button onClick={handleSave} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700"><Check size={12} className="inline mr-1" />Lưu</button><button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs hover:bg-gray-200">Hủy</button></div>
         ) : (
-          <button onClick={() => setEditing(true)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-50"><Pencil size={12} className="inline mr-1" />Edit</button>
+          <button onClick={() => setEditing(true)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-50"><Pencil size={12} className="inline mr-1" />Sửa</button>
         )}
       </div>
       <div className="space-y-4">
@@ -559,7 +559,7 @@ function PersonalityTab({ personality, onSave }: any) {
         ))}
       </div>
       <div className="mt-5 pt-4 border-t border-gray-100">
-        <InfoRow label="Communication Style" value={personality.communicationStyle ?? "—"} />
+        <InfoRow label="Phong cách giao tiếp" value={personality.communicationStyle ?? "—"} />
       </div>
     </div>
   );
@@ -574,7 +574,7 @@ function ContextFilesTab({ files, editingFile, fileContent, onOpen, onContentCha
             <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><FileText size={14} /> {editingFile}</h3>
             <div className="flex gap-2">
               <button onClick={onSave} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 flex items-center gap-1"><Save size={12} /> Save</button>
-              <button onClick={onCancel} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs hover:bg-gray-200">Cancel</button>
+              <button onClick={onCancel} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs hover:bg-gray-200">Hủy</button>
             </div>
           </div>
           <textarea value={fileContent} onChange={e => onContentChange(e.target.value)} className="w-full h-80 font-mono text-xs p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200" />
@@ -593,7 +593,7 @@ function ContextFilesTab({ files, editingFile, fileContent, onOpen, onContentCha
               </div>
             </button>
           ))}
-          {files.length === 0 && <p className="text-sm text-gray-400 col-span-3">No context files found</p>}
+          {files.length === 0 && <p className="text-sm text-gray-400 col-span-3">Không tìm thấy tệp ngữ cảnh</p>}
         </div>
       )}
     </div>
@@ -625,12 +625,12 @@ function CommitmentsTab({ commitments, agentId, onRefresh }: { commitments: any[
 
       {showCreate && (
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-3">
-          <SelectField label="Type" value={form.type} onChange={v => setForm({ ...form, type: v })} options={[{ value: "reminder", label: "Reminder" }, { value: "follow_up", label: "Follow Up" }, { value: "care_check_in", label: "Care Check-in" }, { value: "deadline_check", label: "Deadline" }, { value: "open_loop", label: "Open Loop" }]} />
+          <SelectField label="Loại" value={form.type} onChange={v => setForm({ ...form, type: v })} options={[{ value: "reminder", label: "Reminder" }, { value: "follow_up", label: "Follow Up" }, { value: "care_check_in", label: "Care Check-in" }, { value: "deadline_check", label: "Deadline" }, { value: "open_loop", label: "Open Loop" }]} />
           <Field label="Title" value={form.title} onChange={v => setForm({ ...form, title: v })} placeholder="What did you commit to?" />
-          <Field label="Description" value={form.description} onChange={v => setForm({ ...form, description: v })} placeholder="Details..." multiline />
+          <Field label="Mô tả" value={form.description} onChange={v => setForm({ ...form, description: v })} placeholder="Details..." multiline />
           <div className="flex gap-2">
-            <button onClick={handleCreate} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold">Create</button>
-            <button onClick={() => setShowCreate(false)} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs">Cancel</button>
+            <button onClick={handleCreate} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold">Tạo</button>
+            <button onClick={() => setShowCreate(false)} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs">Hủy</button>
           </div>
         </div>
       )}
@@ -647,11 +647,11 @@ function CommitmentsTab({ commitments, agentId, onRefresh }: { commitments: any[
               {c.description && <p className="text-xs text-gray-500 mt-0.5">{c.description}</p>}
             </div>
             {c.status === "active" && (
-              <button onClick={() => handleComplete(c.id)} className="px-2 py-1 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-green-50 hover:text-green-600 hover:border-green-200">Done</button>
+              <button onClick={() => handleComplete(c.id)} className="px-2 py-1 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-green-50 hover:text-green-600 hover:border-green-200">Xong</button>
             )}
           </div>
         ))}
-        {commitments.length === 0 && <p className="text-sm text-gray-400">No commitments yet</p>}
+        {commitments.length === 0 && <p className="text-sm text-gray-400">Chưa có cam kết</p>}
       </div>
     </div>
   );
@@ -675,7 +675,7 @@ function MoodHistoryTab({ history }: { history: any[] }) {
             <span className="text-[10px] text-gray-400">{new Date(h.createdAt).toLocaleString()}</span>
           </div>
         ))}
-        {history.length === 0 && <p className="text-sm text-gray-400">No mood history recorded yet</p>}
+        {history.length === 0 && <p className="text-sm text-gray-400">Chưa ghi nhận lịch sử cảm xúc</p>}
       </div>
     </div>
   );
@@ -691,7 +691,7 @@ function ConfigSection({ title, icon, editing, onEdit, onSave, onCancel, saving,
         {editing ? (
           <div className="flex gap-1">
             <button onClick={onSave} disabled={saving} className="px-2 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 disabled:opacity-50"><Check size={10} className="inline" /> Save</button>
-            <button onClick={onCancel} className="px-2 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs hover:bg-gray-200">Cancel</button>
+            <button onClick={onCancel} className="px-2 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs hover:bg-gray-200">Hủy</button>
           </div>
         ) : (
           <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"><Pencil size={12} /></button>
@@ -854,7 +854,7 @@ function SkillsSection({ agentId, skills: initialSkills }: { agentId: number; sk
       <div className="space-y-2">
         {skills.map((s: any) => (
           <div key={s.id} className="flex items-center gap-2 group">
-            <button onClick={() => s.pinned ? handleUnpin(s.id) : handlePin(s.id)} className="p-0.5 rounded hover:bg-gray-100" title={s.pinned ? "Unpin" : "Pin"}>
+            <button onClick={() => s.pinned ? handleUnpin(s.id) : handlePin(s.id)} className="p-0.5 rounded hover:bg-gray-100" title={s.pinned ? "Bỏ ghim" : "Ghim"}>
               <Pin size={11} className={s.pinned ? "text-orange-500" : "text-gray-300"} />
             </button>
             <span className="text-xs text-gray-600 w-28 truncate">{s.name}</span>
@@ -868,7 +868,7 @@ function SkillsSection({ agentId, skills: initialSkills }: { agentId: number; sk
             </button>
           </div>
         ))}
-        {skills.length === 0 && <p className="text-xs text-gray-400">No skills yet. Click "Browse" to add from catalog.</p>}
+        {skills.length === 0 && <p className="text-xs text-gray-400">No skills yet. Click "Duyệt" to add from catalog.</p>}
       </div>
 
       {/* Browse Catalog */}
@@ -876,7 +876,7 @@ function SkillsSection({ agentId, skills: initialSkills }: { agentId: number; sk
         <div className="mt-4 pt-3 border-t border-gray-100">
           <div className="flex items-center gap-2 mb-3">
             <Search size={12} className="text-gray-400" />
-            <input value={catSearch} onChange={e => setCatSearch(e.target.value)} placeholder="Search skills..." className="flex-1 text-xs border-none outline-none bg-transparent placeholder-gray-400" />
+            <input value={catSearch} onChange={e => setCatSearch(e.target.value)} placeholder="Tìm kỹ năng..." className="flex-1 text-xs border-none outline-none bg-transparent placeholder-gray-400" />
           </div>
           <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
             {filteredCatalog.map(item => (

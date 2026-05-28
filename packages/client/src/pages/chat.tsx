@@ -8,24 +8,24 @@ import type { Message, Agent } from "@/lib/api";
 
 // ─── Slash Commands ───────────────────────────────────────
 const SLASH_COMMANDS = [
-  { cmd: "/spawn", desc: "Create a sub-agent for a task", icon: GitBranch, usage: "/spawn <purpose>" },
-  { cmd: "/delegate", desc: "Delegate task to another agent", icon: ArrowRight, usage: "/delegate @AgentName <task>" },
-  { cmd: "/remember", desc: "Save a memory for the agent", icon: BookOpen, usage: "/remember <what to remember>" },
-  { cmd: "/plan", desc: "Ask agent to create a plan", icon: Sparkles, usage: "/plan <goal>" },
-  { cmd: "/mood", desc: "Check or set agent mood", icon: Heart, usage: "/mood [new_mood]" },
-  { cmd: "/tools", desc: "List available tools", icon: Wrench, usage: "/tools" },
-  { cmd: "/clear", desc: "Clear chat display (keeps history)", icon: Trash2, usage: "/clear" },
-  { cmd: "/help", desc: "Show all available commands", icon: Users, usage: "/help" },
+  { cmd: "/spawn", desc: "Tạo sub-agent cho tác vụ", icon: GitBranch, usage: "/spawn <mục đích>" },
+  { cmd: "/delegate", desc: "Giao việc cho agent khác", icon: ArrowRight, usage: "/delegate @TênAgent <tác vụ>" },
+  { cmd: "/remember", desc: "Lưu ký ức cho agent", icon: BookOpen, usage: "/remember <điều cần nhớ>" },
+  { cmd: "/plan", desc: "Yêu cầu agent lập kế hoạch", icon: Sparkles, usage: "/plan <mục tiêu>" },
+  { cmd: "/mood", desc: "Kiểm tra hoặc đặt cảm xúc agent", icon: Heart, usage: "/mood [cảm_xúc]" },
+  { cmd: "/tools", desc: "Liệt kê công cụ có sẵn", icon: Wrench, usage: "/tools" },
+  { cmd: "/clear", desc: "Xóa màn hình chat (giữ lịch sử)", icon: Trash2, usage: "/clear" },
+  { cmd: "/help", desc: "Hiển tất cả lệnh", icon: Users, usage: "/help" },
 ];
 
 // Quick actions for agent operations
 const QUICK_ACTIONS = [
-  { key: "mood", label: "Mood", icon: Heart, cmd: "/mood", color: "text-pink-500" },
-  { key: "tools", label: "Tools", icon: Wrench, cmd: "/tools", color: "text-amber-500" },
-  { key: "remember", label: "Remember", icon: BookOpen, cmd: "/remember ", color: "text-emerald-500" },
-  { key: "spawn", label: "Spawn", icon: GitBranch, cmd: "/spawn ", color: "text-blue-500" },
-  { key: "delegate", label: "Delegate", icon: ArrowRight, cmd: "/delegate ", color: "text-purple-500" },
-  { key: "plan", label: "Plan", icon: Lightbulb, cmd: "/plan ", color: "text-yellow-500" },
+  { key: "mood", label: "Cảm xúc", icon: Heart, cmd: "/mood", color: "text-pink-500" },
+  { key: "tools", label: "Công cụ", icon: Wrench, cmd: "/tools", color: "text-amber-500" },
+  { key: "remember", label: "Ghi nhớ", icon: BookOpen, cmd: "/remember ", color: "text-emerald-500" },
+  { key: "spawn", label: "Tạo mới", icon: GitBranch, cmd: "/spawn ", color: "text-blue-500" },
+  { key: "delegate", label: "Giao việc", icon: ArrowRight, cmd: "/delegate ", color: "text-purple-500" },
+  { key: "plan", label: "Lập kế hoạch", icon: Lightbulb, cmd: "/plan ", color: "text-yellow-500" },
 ];
 
 export default function Chat() {
@@ -190,9 +190,9 @@ export default function Chat() {
 
     if (cmd === "/tools") {
       const tools = activeAgent.toolsConfig;
-      const allowed = tools?.allowList?.join(", ") || "All tools";
-      const denied = tools?.denyList?.join(", ") || "None";
-      const approval = tools?.requireApproval?.join(", ") || "None";
+      const allowed = tools?.allowList?.join(", ") || "Tất cả công cụ";
+      const denied = tools?.denyList?.join(", ") || "Không có";
+      const approval = tools?.requireApproval?.join(", ") || "Không có";
       setStreamingContent(`🔧 Tools for ${activeAgent.name}:\n• Allow: ${allowed}\n• Deny: ${denied}\n• Requires approval: ${approval}`);
       setTimeout(() => setStreamingContent(""), 5000);
       return true;
@@ -270,7 +270,7 @@ export default function Chat() {
   const handleNewSession = (agentId?: number) => {
     const targetAgent = agentId ?? defaultAgentId ?? agents?.[0]?.id;
     if (!targetAgent) return;
-    createSessionMutation.mutate({ agentId: targetAgent, title: "New Chat" }, {
+    createSessionMutation.mutate({ agentId: targetAgent, title: "Trò chuyện mới" }, {
       onSuccess: (s) => { setActiveSession(s.id); setShowAgentPicker(false); setSessionModel(null); setSessionProvider(null); },
     });
   };
@@ -334,22 +334,22 @@ export default function Chat() {
       <div className="w-[280px] bg-white border-r border-gray-100 flex flex-col">
         <div className="p-3 border-b border-gray-50 space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-gray-800">Chat Sessions</h2>
+            <h2 className="text-sm font-bold text-gray-800">Phiên trò chuyện</h2>
             <div className="flex gap-1">
-              <button onClick={() => setShowAgentPicker(true)} className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-colors" title="New chat with agent"><Plus size={14} /></button>
+              <button onClick={() => setShowAgentPicker(true)} className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-colors" title="Tạo trò chuyện mới"><Plus size={14} /></button>
             </div>
           </div>
           {/* Search sessions */}
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300" />
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search sessions..."
+            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Tìm phiên..."
               className="w-full pl-7 pr-2 py-1.5 text-[11px] border border-gray-100 rounded-lg focus:outline-none focus:border-indigo-200" />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
           {filteredSessions.length === 0 && (
-            <div className="text-center py-8 text-gray-400 text-xs">No sessions yet</div>
+            <div className="text-center py-8 text-gray-400 text-xs">Chưa có phiên nào</div>
           )}
           {filteredSessions.map(s => (
             <div key={s.id} className="group relative">
@@ -365,7 +365,7 @@ export default function Chat() {
               {/* Delete button */}
               <button onClick={() => handleDeleteSession(s.id)}
                 className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                title="Delete session">
+                title="Xóa phiên">
                 <Trash2 size={11} />
               </button>
             </div>
@@ -400,17 +400,17 @@ export default function Chat() {
                 {isStreaming ? (
                   <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
                     <Brain size={12} className="animate-pulse" />
-                    <span>Thinking...</span>
+                    <span>Đang suy nghĩ...</span>
                   </div>
                 ) : (
-                  <span className="text-[10px] text-gray-300">Ready</span>
+                  <span className="text-[10px] text-gray-300">Sẵn sàng</span>
                 )}
                 {/* Model/Provider switcher button */}
                 <button onClick={() => setShowModelSwitcher(!showModelSwitcher)}
                   className="flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-colors">
                   <Zap size={10} className={chatProvider?.configured ? "text-emerald-500" : "text-amber-400"} />
                   <span className={chatProvider?.configured ? "text-emerald-600 font-semibold" : "text-amber-500"}>
-                    {sessionModel ?? chatProvider?.model ?? "Default"}
+                    {sessionModel ?? chatProvider?.model ?? "Mặc định"}
                   </span>
                   <ChevronDown size={10} className="text-gray-300" />
                 </button>
@@ -438,7 +438,7 @@ export default function Chat() {
                     if (activeSession) fetch(`/api/sessions/${activeSession}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ overrideModel: val }) });
                   }}
                   className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-300">
-                  <option value="">{availableModels.length ? "Select model..." : sessionProvider ? "Loading..." : "Select provider first"}</option>
+                  <option value="">{availableModels.length ? "Chọn model..." : sessionProvider ? "Đang tải..." : "Chọn Provider trước"}</option>
                   {availableModels.map(m => (
                     <option key={m.id} value={m.id}>{m.name}{m.reasoning ? " 🧠" : ""}{m.vision ? " 👁" : ""}</option>
                   ))}
@@ -453,8 +453,8 @@ export default function Chat() {
             <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
               <MessageSquare size={28} className="text-indigo-400" />
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-1">Start a Conversation</h3>
-            <p className="text-sm text-gray-400 mb-6 max-w-sm">Choose an agent to begin chatting. Your agents have unique personalities, skills, and memories.</p>
+            <h3 className="text-lg font-bold text-gray-800 mb-1">Bắt đầu trò chuyện</h3>
+            <p className="text-sm text-gray-400 mb-6 max-w-sm">Chọn agent để bắt đầu. Mỗi agent có tính cách, kỹ năng và ký ức riêng.</p>
             <div className="grid grid-cols-2 gap-2 max-w-md">
               {(agents ?? []).slice(0, 4).map(a => (
                 <button key={a.id} onClick={() => handleNewSession(a.id)}
@@ -531,7 +531,7 @@ export default function Chat() {
               {/* Slash menu */}
               {showSlashMenu && input.startsWith("/") && (
                 <div className="absolute bottom-full mb-2 left-6 bg-white border border-gray-200 rounded-xl shadow-lg p-1.5 w-80 z-10 max-h-[300px] overflow-y-auto">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1.5">Commands</p>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1.5">Lệnh</p>
                   {SLASH_COMMANDS.filter(c => c.cmd.startsWith(input.toLowerCase().split(" ")[0])).map(c => (
                     <button key={c.cmd} onClick={() => { setInput(c.cmd + " "); setShowSlashMenu(false); inputRef.current?.focus(); }}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-indigo-50 text-left transition-colors">
@@ -548,7 +548,7 @@ export default function Chat() {
 
               <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-xl p-1.5 focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-50 transition-colors">
                 {/* Attach button */}
-                <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Attach file (coming soon)" disabled>
+                <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Đính kèm file (sắp có)" disabled>
                   <Paperclip size={15} />
                 </button>
 
@@ -565,11 +565,11 @@ export default function Chat() {
 
                 {/* Send or Stop button */}
                 {isStreaming ? (
-                  <button onClick={handleAbort} className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors" title="Stop generation">
+                  <button onClick={handleAbort} className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors" title="Dừng tạo">
                     <Square size={14} />
                   </button>
                 ) : (
-                  <button onClick={handleSend} disabled={!input.trim()} className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-30 transition-colors" title="Send message">
+                  <button onClick={handleSend} disabled={!input.trim()} className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-30 transition-colors" title="Gửi tin nhắn">
                     <Send size={14} />
                   </button>
                 )}
@@ -591,7 +591,7 @@ export default function Chat() {
       {activeAgent && (
         <div className="w-[260px] bg-white border-l border-gray-100 p-4 overflow-y-auto">
           <div className="mb-4">
-            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">EMOTIONAL STATE</p>
+            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">TRẠNG THÁI CẢM XÚC</p>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ background: MOOD_COLORS[activeAgent.mood] ?? "#6366f1" }} />
               <span className="text-sm font-semibold" style={{ color: MOOD_COLORS[activeAgent.mood] ?? "#6366f1" }}>{activeAgent.moodLabel}</span>
@@ -600,7 +600,7 @@ export default function Chat() {
           </div>
 
           <div className="mb-4">
-            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">CONTEXT WINDOW</p>
+            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">CỬA SỔ NGỮ CẢNH</p>
             <div className="bg-gray-50 rounded-lg p-2.5">
               <div className="flex justify-between text-[10px] mb-1">
                 <span className="text-gray-500">{msgCount * 150} est. tokens</span>
@@ -613,7 +613,7 @@ export default function Chat() {
           </div>
 
           <div className="mb-4">
-            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">RELEVANT MEMORIES</p>
+            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">KÝ ỨC LIÊN QUAN</p>
             {[
               { text: "User prefers visual/chart explanations", tags: ["#preference", "#visual"] },
               { text: "Q4 analysis requested 3x this month", tags: ["#pattern", "#analytics"] },
@@ -627,7 +627,7 @@ export default function Chat() {
           </div>
 
           <div className="mb-4">
-            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">ACTIVE SKILLS</p>
+            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">KỸ NĂNG HOẠT ĐỘNG</p>
             <div className="flex flex-wrap gap-1">
               {(activeAgent.skills ?? ["Data Analysis", "Statistical Reasoning", "Data Visualization", "Business Intelligence"]).map(s => (
                 <span key={s} className="text-[9px] px-2 py-1 bg-indigo-50 text-indigo-600 rounded-full font-medium">{s}</span>
@@ -682,7 +682,7 @@ export default function Chat() {
           </div>
 
           <div>
-            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">RELATIONSHIP SCORE</p>
+            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">ĐIỂM QUAN HỆ</p>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} className={i <= 4 ? "text-amber-400 fill-amber-400" : "text-gray-200"} />)}
             </div>
@@ -696,7 +696,7 @@ export default function Chat() {
         <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center" onClick={() => setShowAgentPicker(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-[400px] p-5" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-800">New Chat — Choose Agent</h3>
+              <h3 className="text-sm font-bold text-gray-800">Trò chuyện mới — Chọn Agent</h3>
               <button onClick={() => setShowAgentPicker(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
             </div>
             {/* Default agent quick start */}
@@ -709,9 +709,9 @@ export default function Chat() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-indigo-700">{defAgent.name}</p>
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-700">Default</span>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-700">Mặc định</span>
                     </div>
-                    <p className="text-xs text-indigo-400">{defAgent.purpose ?? defAgent.nature ?? "Default agent"}</p>
+                    <p className="text-xs text-indigo-400">{defAgent.purpose ?? defAgent.nature ?? "Agent mặc định"}</p>
                   </div>
                   <Star size={14} className="text-indigo-400" />
                 </button>
@@ -724,7 +724,7 @@ export default function Chat() {
                   <span className="text-2xl">{a.emoji}</span>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-gray-700">{a.name}</p>
-                    <p className="text-xs text-gray-400">{a.purpose ?? a.nature ?? "General assistant"}</p>
+                    <p className="text-xs text-gray-400">{a.purpose ?? a.nature ?? "Trợ lý chung"}</p>
                   </div>
                   <div className="text-right">
                     <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: (MOOD_COLORS[a.mood] ?? "#6366f1") + "20", color: MOOD_COLORS[a.mood] ?? "#6366f1" }}>{a.mood}</span>
@@ -874,7 +874,7 @@ function MessageBubble({ msg, agentEmoji, agentName, onCopy, onRetry, copiedId }
         <div className="max-w-[65%] space-y-1">
           <div className="bg-indigo-600 text-white rounded-2xl rounded-br-md px-4 py-3 text-sm">{msg.content}</div>
           <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={() => onCopy(msg.content, msg.id)} className="text-gray-300 hover:text-gray-500 p-1" title="Copy">
+            <button onClick={() => onCopy(msg.content, msg.id)} className="text-gray-300 hover:text-gray-500 p-1" title="Sao chép">
               {copiedId === msg.id ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
             </button>
             <span className="text-[9px] text-gray-300 self-center">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
@@ -896,7 +896,7 @@ function MessageBubble({ msg, agentEmoji, agentName, onCopy, onRetry, copiedId }
           "bg-gray-50 border border-gray-100 text-gray-500")}>
           <div className="flex items-center gap-1.5 mb-1">
             {isDelegation ? <ArrowRight size={12} /> : isSpawn ? <GitBranch size={12} /> : <Cpu size={12} />}
-            <span className="font-semibold">{isDelegation ? "Delegation" : isSpawn ? "Sub-Agent" : "System"}</span>
+            <span className="font-semibold">{isDelegation ? "Giao việc" : isSpawn ? "Agent con" : "Hệ thống"}</span>
             <span className="text-[9px] opacity-60 ml-auto">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
           </div>
           {msg.content}
@@ -922,7 +922,7 @@ function MessageBubble({ msg, agentEmoji, agentName, onCopy, onRetry, copiedId }
           <div className="rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
             <button onClick={() => setShowThinking(!showThinking)} className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-100 transition-colors">
               <Brain size={12} className="text-amber-500" />
-              <span className="text-[11px] font-medium text-gray-500">Thinking</span>
+              <span className="text-[11px] font-medium text-gray-500">Suy nghĩ</span>
               <ChevronRight size={10} className={cn("ml-auto text-gray-400 transition-transform", showThinking && "rotate-90")} />
             </button>
             {showThinking && (
@@ -955,13 +955,13 @@ function MessageBubble({ msg, agentEmoji, agentName, onCopy, onRetry, copiedId }
                   <div className="border-t border-gray-100 px-3 py-2 space-y-1.5">
                     {tc.input && (
                       <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase">Input</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase">Đầu vào</p>
                         <pre className="text-[10px] font-mono text-gray-600 bg-white rounded p-1.5 max-h-24 overflow-auto">{tc.input}</pre>
                       </div>
                     )}
                     {tc.output && (
                       <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase">Output</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase">Đầu ra</p>
                         <pre className="text-[10px] font-mono text-gray-600 bg-white rounded p-1.5 max-h-24 overflow-auto">{tc.output}</pre>
                       </div>
                     )}
@@ -979,10 +979,10 @@ function MessageBubble({ msg, agentEmoji, agentName, onCopy, onRetry, copiedId }
 
         {/* Message actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={() => onCopy(msg.content, msg.id)} className="text-gray-300 hover:text-gray-500 p-1 rounded" title="Copy">
+          <button onClick={() => onCopy(msg.content, msg.id)} className="text-gray-300 hover:text-gray-500 p-1 rounded" title="Sao chép">
             {copiedId === msg.id ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
           </button>
-          <button onClick={() => onRetry(msg.id)} className="text-gray-300 hover:text-gray-500 p-1 rounded" title="Retry">
+          <button onClick={() => onRetry(msg.id)} className="text-gray-300 hover:text-gray-500 p-1 rounded" title="Thử lại">
             <RotateCcw size={11} />
           </button>
           <span className="text-[9px] text-gray-300 ml-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {agentName}</span>

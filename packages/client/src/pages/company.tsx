@@ -15,7 +15,7 @@ export default function Company() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Company</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Công ty</h1>
           <p className="text-gray-500">Multi-agent organization structure</p>
         </div>
         <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2">
@@ -43,12 +43,12 @@ export default function Company() {
 
       {/* Org Chart */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Organization Chart</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">Sơ đồ tổ chức</h2>
         <div className="flex flex-col items-center">
           {/* CEO Level */}
           <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl shadow-lg mb-2">
             <div className="flex items-center gap-2"><Crown size={16} /> <span className="font-semibold">Admin (You)</span></div>
-            <div className="text-xs opacity-80">Company Owner</div>
+            <div className="text-xs opacity-80">Chủ sở hữu</div>
           </div>
           <div className="w-px h-8 bg-gray-300" />
           <div className="flex items-center gap-1 mb-2">
@@ -91,11 +91,11 @@ export default function Company() {
               <h3 className="font-semibold text-gray-900">{dept.name}</h3>
             </div>
             <div className="space-y-3">
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Lead</span><span className="font-medium">{dept.lead}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Tasks</span><span className="font-medium">4</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Performance</span><span className="font-medium text-green-600">92%</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Trưởng nhóm</span><span className="font-medium">{dept.lead}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Tác vụ</span><span className="font-medium">4</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Hiệu suất</span><span className="font-medium text-green-600">92%</span></div>
               <div className="mt-3">
-                <div className="text-xs text-gray-500 mb-1">Progress</div>
+                <div className="text-xs text-gray-500 mb-1">Tiến độ</div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
                   <div className="h-2 rounded-full" style={{ width: "78%", background: dept.color }} />
                 </div>

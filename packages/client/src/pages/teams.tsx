@@ -31,7 +31,7 @@ export default function Teams() {
     <div className="p-7 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Teams</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Nhóm</h1>
           <p className="text-sm text-gray-400 mt-0.5">{teams?.length ?? 0} teams active</p>
         </div>
         <button className="flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2.5 rounded-2xl shadow-[0_4px_12px_rgba(99,102,241,0.4)] hover:bg-indigo-700 transition-colors">
@@ -56,7 +56,7 @@ export default function Teams() {
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={cn("px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize",
               activeTab === tab ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}>
-            {tab === "board" ? "Kanban Board" : tab === "delegations" ? "Delegations" : "Agent Links"}
+            {tab === "board" ? "Kanban Board" : tab === "delegations" ? "Phân công" : "Agent Links"}
           </button>
         ))}
       </div>
@@ -65,7 +65,7 @@ export default function Teams() {
       {team && (
         <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold text-gray-700">Team Members</p>
+            <p className="text-xs font-bold text-gray-700">Thành viên nhóm</p>
             <div className="flex gap-1.5">{(team.values ?? []).map(v => <span key={v} className="text-[9px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full">{v}</span>)}</div>
           </div>
           <div className="flex gap-3">
@@ -133,7 +133,7 @@ export default function Teams() {
           {(delegations ?? []).length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
               <ArrowRight size={32} className="text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">No delegations yet</p>
+              <p className="text-sm text-gray-400">Chưa có phân công</p>
               <p className="text-xs text-gray-300 mt-1">Use /delegate @AgentName task in Chat</p>
             </div>
           ) : (delegations ?? []).map(d => (
@@ -159,7 +159,7 @@ export default function Teams() {
               <p className="text-sm text-gray-700 mb-2">{d.taskDescription}</p>
               {d.result && (
                 <details className="text-xs">
-                  <summary className="text-indigo-500 cursor-pointer font-medium">View result</summary>
+                  <summary className="text-indigo-500 cursor-pointer font-medium">Xem kết quả</summary>
                   <div className="mt-2 bg-gray-50 rounded-lg p-3 text-gray-600 whitespace-pre-wrap text-[11px]">{d.result}</div>
                 </details>
               )}
@@ -174,7 +174,7 @@ export default function Teams() {
           {(agentLinksData ?? []).length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
               <Link2 size={32} className="text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">No agent links yet</p>
+              <p className="text-sm text-gray-400">Chưa có liên kết agent</p>
               <p className="text-xs text-gray-300 mt-1">Links are created when agents spawn sub-agents or delegate tasks</p>
             </div>
           ) : (agentLinksData ?? []).map(l => (

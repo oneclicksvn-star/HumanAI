@@ -20,7 +20,7 @@ export default function Channels() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Channels</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Kênh</h1>
           <p className="text-gray-500">{channels.filter((c: any) => c.status === "connected").length} of {channels.length} connected</p>
         </div>
         <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2">
@@ -32,15 +32,15 @@ export default function Channels() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="text-2xl font-bold text-green-500">{channels.filter((c: any) => c.status === "connected").length}</div>
-          <div className="text-sm text-gray-500">Connected</div>
+          <div className="text-sm text-gray-500">Đã kết nối</div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="text-2xl font-bold text-gray-400">{channels.filter((c: any) => c.status === "disconnected").length}</div>
-          <div className="text-sm text-gray-500">Disconnected</div>
+          <div className="text-sm text-gray-500">Mất kết nối</div>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <div className="text-2xl font-bold text-indigo-500">{channels.reduce((sum: number, c: any) => sum + c.messageCount, 0)}</div>
-          <div className="text-sm text-gray-500">Total Messages</div>
+          <div className="text-sm text-gray-500">Tổng tin nhắn</div>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export default function Channels() {
                     <span>{agent.emoji}</span> <span>{agent.name}</span>
                   </div>
                 ) : (
-                  <span className="text-gray-400 text-xs">No agent assigned</span>
+                  <span className="text-gray-400 text-xs">Chưa gán agent</span>
                 )}
                 {ch.lastActivity && (
                   <span className="text-xs text-gray-400">Last: {new Date(ch.lastActivity).toLocaleTimeString()}</span>

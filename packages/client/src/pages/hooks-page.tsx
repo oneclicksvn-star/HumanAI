@@ -61,29 +61,29 @@ export default function HooksPage() {
       {showCreate && (
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-700">New Hook</h3>
+            <h3 className="text-sm font-bold text-gray-700">Hook mới</h3>
             <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Name</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase">Tên</label>
               <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="My Hook" className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-300" />
             </div>
             <div>
               <label className="text-[10px] font-bold text-gray-500 uppercase">Agent (optional)</label>
               <select value={form.agentId} onChange={e => setForm({ ...form, agentId: Number(e.target.value) })} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                <option value={0}>All Agents</option>
+                <option value={0}>Tất cả Agent</option>
                 {agents.map(a => <option key={a.id} value={a.id}>{a.emoji} {a.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Event</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase">Sự kiện</label>
               <select value={form.event} onChange={e => setForm({ ...form, event: e.target.value })} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 {EVENTS.map(ev => <option key={ev} value={ev}>{ev}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Action</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase">Hành động</label>
               <select value={form.action} onChange={e => setForm({ ...form, action: e.target.value })} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm">
                 {ACTIONS.map(ac => <option key={ac} value={ac}>{ac}</option>)}
               </select>
@@ -97,7 +97,7 @@ export default function HooksPage() {
               <input value={form.config} onChange={e => setForm({ ...form, config: e.target.value })} placeholder='{"url": "..."}' className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono" />
             </div>
           </div>
-          <button onClick={handleCreate} disabled={!form.name} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50">Create</button>
+          <button onClick={handleCreate} disabled={!form.name} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50">Tạo</button>
         </div>
       )}
 
@@ -106,8 +106,8 @@ export default function HooksPage() {
         {hooks.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
             <Webhook size={28} className="text-gray-200 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">No hooks configured</p>
-            <p className="text-xs text-gray-300 mt-1">Create a hook to respond to system events</p>
+            <p className="text-sm text-gray-400">Chưa có Hook nào</p>
+            <p className="text-xs text-gray-300 mt-1">Tạo hook để phản ứng với sự kiện hệ thống</p>
           </div>
         )}
         {hooks.map((hook: any) => (

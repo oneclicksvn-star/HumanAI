@@ -43,7 +43,7 @@ export default function ToolsPage() {
     <div className="p-7 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tools</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Công cụ</h1>
           <p className="text-sm text-gray-400 mt-0.5">{tools.length} tools · {tools.filter((t: any) => t.isEnabled).length} enabled · {approvalQueue.length} require approval</p>
         </div>
       </div>
@@ -51,14 +51,14 @@ export default function ToolsPage() {
       {/* Tabs + Search */}
       <div className="flex items-center gap-4">
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-          <button onClick={() => setTab("all")} className={cn("px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors", tab === "all" ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>All Tools</button>
+          <button onClick={() => setTab("all")} className={cn("px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors", tab === "all" ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>Tất cả công cụ</button>
           <button onClick={() => setTab("approval")} className={cn("px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1", tab === "approval" ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>
             <Shield size={11} /> Approval Queue ({approvalQueue.length})
           </button>
         </div>
         <div className="relative flex-1 max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools..."
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm công cụ..."
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-indigo-300" />
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function ToolsPage() {
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: "Builtin", value: tools.filter((t: any) => t.type === "builtin").length, color: "#6366f1" },
-          { label: "Custom", value: tools.filter((t: any) => t.type === "custom").length, color: "#ec4899" },
+          { label: "Tùy chỉnh", value: tools.filter((t: any) => t.type === "custom").length, color: "#ec4899" },
           { label: "MCP", value: tools.filter((t: any) => t.type === "mcp").length, color: "#22c55e" },
           { label: "Approval Required", value: approvalQueue.length, color: "#f59e0b" },
         ].map((s) => (
@@ -84,7 +84,7 @@ export default function ToolsPage() {
           {approvalQueue.length === 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
               <CheckCircle size={28} className="text-gray-200 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">No pending approvals</p>
+              <p className="text-sm text-gray-400">Không có mục chờ duyệt</p>
             </div>
           )}
           {approvalQueue.map((tool: any) => {
@@ -99,7 +99,7 @@ export default function ToolsPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-900">{tool.name}</span>
                     <Shield size={12} className="text-amber-500" />
-                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-semibold">Requires Approval</span>
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-semibold">Cần phê duyệt</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">{tool.description}</p>
                   <p className="text-[10px] text-gray-400 mt-1">{tool.usageCount} uses · Category: {tool.category}</p>

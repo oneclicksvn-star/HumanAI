@@ -19,7 +19,7 @@ export default function Heartbeat() {
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Heartbeat</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Nhịp tim</h1>
           <p className="text-gray-500">Real-time system monitoring (updates every 10s)</p>
         </div>
       </div>
@@ -33,7 +33,7 @@ export default function Heartbeat() {
           )}
         </div>
         <div className="text-2xl font-bold text-gray-900 mt-4 capitalize">{status}</div>
-        <div className="text-sm text-gray-500">Server is responding</div>
+        <div className="text-sm text-gray-500">Server đang phản hồi</div>
       </div>
 
       {/* Metrics */}
@@ -41,19 +41,19 @@ export default function Heartbeat() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <Clock size={20} className="text-indigo-500" />
-            <h2 className="font-semibold text-gray-900">Uptime</h2>
+            <h2 className="font-semibold text-gray-900">Thời gian hoạt động</h2>
           </div>
           <div className="text-3xl font-bold text-gray-900">{formatUptime(uptime)}</div>
-          <div className="text-sm text-gray-500 mt-1">Since server start</div>
+          <div className="text-sm text-gray-500 mt-1">Từ lúc khởi động</div>
           <div className="mt-4">
-            <div className="flex justify-between text-sm mb-1"><span className="text-gray-500">Total Seconds</span><span className="font-mono">{uptime.toLocaleString()}</span></div>
+            <div className="flex justify-between text-sm mb-1"><span className="text-gray-500">Tổng giây</span><span className="font-mono">{uptime.toLocaleString()}</span></div>
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <Cpu size={20} className="text-purple-500" />
-            <h2 className="font-semibold text-gray-900">Memory</h2>
+            <h2 className="font-semibold text-gray-900">Bộ nhớ</h2>
           </div>
           <div className="space-y-4">
             <div>
@@ -67,7 +67,7 @@ export default function Heartbeat() {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500">Heap Used</span>
+                <span className="text-gray-500">Bộ nhớ heap</span>
                 <span className="font-medium">{memory.heapUsed} MB</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-2">

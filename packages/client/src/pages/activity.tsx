@@ -17,13 +17,13 @@ export default function ActivityPage() {
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Activity</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Hoạt động</h1>
           <p className="text-gray-500">Real-time activity feed — {items.length} events</p>
         </div>
         <div className="flex items-center gap-2">
           <Filter size={16} className="text-gray-400" />
           <select value={filterAgent ?? ""} onChange={(e) => setFilterAgent(e.target.value ? Number(e.target.value) : null)} className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
-            <option value="">All Agents</option>
+            <option value="">Tất cả Agent</option>
             {agents.map((a: any) => <option key={a.id} value={a.id}>{a.emoji} {a.name}</option>)}
           </select>
         </div>

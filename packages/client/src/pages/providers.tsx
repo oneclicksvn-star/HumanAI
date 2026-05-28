@@ -201,9 +201,9 @@ export default function Providers() {
       <div className="flex items-center justify-between">
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
           {[
-            { key: "all", label: "All", count: (providers ?? []).length },
-            { key: "active", label: "Active", count: activeCount },
-            { key: "custom", label: "Custom", count: (providers ?? []).filter(p => p.type === "custom_openai").length },
+            { key: "all", label: "Tất cả", count: (providers ?? []).length },
+            { key: "active", label: "Hoạt động", count: activeCount },
+            { key: "custom", label: "Tùy chỉnh", count: (providers ?? []).filter(p => p.type === "custom_openai").length },
           ].map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key as any)}
               className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-colors",
@@ -214,7 +214,7 @@ export default function Providers() {
         </div>
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search providers..."
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm provider..."
             className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-300 w-56" />
         </div>
       </div>
@@ -223,10 +223,10 @@ export default function Providers() {
       {showAdd && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-lg space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-800">Add Provider</h3>
+            <h3 className="text-sm font-bold text-gray-800">Thêm Provider</h3>
             <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-              <button onClick={() => setAddTab("popular")} className={cn("px-3 py-1 rounded-md text-xs font-bold", addTab === "popular" ? "bg-white shadow-sm" : "text-gray-500")}>Popular</button>
-              <button onClick={() => setAddTab("custom")} className={cn("px-3 py-1 rounded-md text-xs font-bold", addTab === "custom" ? "bg-white shadow-sm" : "text-gray-500")}>Custom</button>
+              <button onClick={() => setAddTab("popular")} className={cn("px-3 py-1 rounded-md text-xs font-bold", addTab === "popular" ? "bg-white shadow-sm" : "text-gray-500")}>Phổ biến</button>
+              <button onClick={() => setAddTab("custom")} className={cn("px-3 py-1 rounded-md text-xs font-bold", addTab === "custom" ? "bg-white shadow-sm" : "text-gray-500")}>Tùy chỉnh</button>
             </div>
           </div>
 
@@ -293,7 +293,7 @@ export default function Providers() {
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-300" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Default Model</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Model mặc định</label>
                   <input value={formDefaultModel} onChange={e => setFormDefaultModel(e.target.value)} placeholder="model-name"
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-300" />
                 </div>
@@ -310,12 +310,12 @@ export default function Providers() {
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-300" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Auth Type</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Kiểu xác thực</label>
                   <select value={formAuthType} onChange={e => setFormAuthType(e.target.value)}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-300">
                     <option value="bearer">Bearer Token</option>
                     <option value="x-api-key">x-api-key Header</option>
-                    <option value="none">No Auth</option>
+                    <option value="none">Không xác thực</option>
                   </select>
                 </div>
               </div>
@@ -390,20 +390,20 @@ export default function Providers() {
                   <div className="flex items-center gap-2">
                     <Key size={11} className="text-gray-400" />
                     <span className="text-[10px] font-semibold text-gray-500">
-                      {hasKey ? <span className="text-emerald-600">{p.apiKey}</span> : <span className="text-amber-500">Not configured</span>}
+                      {hasKey ? <span className="text-emerald-600">{p.apiKey}</span> : <span className="text-amber-500">Chưa cấu hình</span>}
                     </span>
                   </div>
                   {editingId !== p.id && (
                     <button onClick={() => { setEditingId(p.id); setEditKey(""); }}
                       className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">
-                      {hasKey ? "Update" : "Add Key"}
+                      {hasKey ? "Cập nhật" : "Thêm Key"}
                     </button>
                   )}
                 </div>
 
                 {editingId === p.id && (
                   <div className="flex gap-2">
-                    <input value={editKey} onChange={e => setEditKey(e.target.value)} type="password" placeholder="Enter API key..."
+                    <input value={editKey} onChange={e => setEditKey(e.target.value)} type="password" placeholder="Nhập API key..."
                       className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-300" />
                     <button onClick={() => handleSaveKey(p.id)} className="text-xs font-bold text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700"><Check size={11} /></button>
                     <button onClick={() => setEditingId(null)} className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200"><X size={11} /></button>
@@ -468,7 +468,7 @@ export default function Providers() {
               </div>
               <div className="relative">
                 <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input value={modelSearch} onChange={e => setModelSearch(e.target.value)} placeholder="Search models..."
+                <input value={modelSearch} onChange={e => setModelSearch(e.target.value)} placeholder="Tìm model..."
                   className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-300" />
               </div>
               <p className="text-[10px] text-gray-400 mt-2">{drawerModels.length} models available</p>
@@ -487,8 +487,8 @@ export default function Providers() {
                         <p className="text-[9px] text-gray-400 truncate">{m.id}</p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                        {m.reasoning && <span className="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Brain size={8} />Reasoning</span>}
-                        {m.vision && <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Eye size={8} />Vision</span>}
+                        {m.reasoning && <span className="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Brain size={8} />Suy luận</span>}
+                        {m.vision && <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5"><Eye size={8} />Thị giác</span>}
                         {m.contextWindow ? <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{m.contextWindow >= 1000000 ? `${(m.contextWindow/1000000).toFixed(0)}M` : `${(m.contextWindow/1000).toFixed(0)}K`}</span> : null}
                       </div>
                     </div>
@@ -503,7 +503,7 @@ export default function Providers() {
       {filteredProviders.length === 0 && (
         <div className="text-center py-16">
           <Globe size={40} className="mx-auto text-gray-200 mb-4" />
-          <p className="text-sm text-gray-400">No providers found</p>
+          <p className="text-sm text-gray-400">Không tìm thấy Provider</p>
           <button onClick={() => setShowAdd(true)} className="text-xs text-indigo-600 font-bold mt-2 hover:text-indigo-700">+ Add your first provider</button>
         </div>
       )}

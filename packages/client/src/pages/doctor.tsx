@@ -17,8 +17,8 @@ export default function Doctor() {
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Doctor</h1>
-          <p className="text-gray-500">System health checks</p>
+          <h1 className="text-2xl font-bold text-gray-900">Chẩn đoán</h1>
+          <p className="text-gray-500">Kiểm tra sức khỏe hệ thống</p>
         </div>
         <button onClick={() => refetch()} disabled={isRefetching} className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2 disabled:opacity-50">
           <RefreshCw size={18} className={isRefetching ? "animate-spin" : ""} /> Run Checks
