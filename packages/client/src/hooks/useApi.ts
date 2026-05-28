@@ -84,6 +84,13 @@ export const useCreateProvider = () => {
   return useMutation({ mutationFn: api.createProvider, onSuccess: () => qc.invalidateQueries({ queryKey: ["providers"] }) });
 };
 
+export const useUpdateProvider = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: ({ id, ...data }: { id: number } & Record<string, unknown>) => api.updateProvider(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["providers"] }) });
+};
+
+export const useChatProvider = () => useQuery({ queryKey: ["chat-provider"], queryFn: api.getChatProvider });
+
 // Settings
 export const useSettings = () => {
   return useQuery({

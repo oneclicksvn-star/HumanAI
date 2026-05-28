@@ -17,6 +17,7 @@ import { hooksRoutes } from "./routes/hooks";
 import { cronRoutes } from "./routes/cron";
 import { vaultRoutes } from "./routes/vault";
 import { systemRoutes } from "./routes/system";
+import { chatRoutes } from "./routes/chat";
 
 const app = new Hono();
 
@@ -43,6 +44,7 @@ app.route("/api", hooksRoutes);
 app.route("/api", cronRoutes);
 app.route("/api", vaultRoutes);
 app.route("/api", systemRoutes);
+app.route("/api", chatRoutes);
 
 const port = Number(process.env.PORT ?? 3001);
 

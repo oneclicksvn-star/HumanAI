@@ -279,4 +279,54 @@ export const api = {
   createBackup: (data: any) => request<any>("/backups", { method: "POST", body: JSON.stringify(data) }),
   getDoctor: () => request<any>("/doctor"),
   getHeartbeat: () => request<any>("/heartbeat"),
+
+  // Chat Engine
+  getChatProvider: () => request<{ provider: string; model: string; name?: string; configured: boolean }>("/chat/provider"),
+  sendChatMessage: (sessionId: number, content: string) => request<{ message: Message; userMessage: Message; provider: string }>(`/chat/${sessionId}/send`, { method: "POST", body: JSON.stringify({ content }) }),
+
+  streamChatMessage: async (sessionId: number, content: string, onChunk: (chunk: string) => void, onDone: (data: { message: Message; usage?: { inputTokens: number; outputTokens: number; latencyMs: number }; provider: string }) => void, onError: (error: string) => void) => {
+    const res = await fetch(`${BASE}/chat/${sessionId}/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      onError(data.error ?? `HTTP ${res.status}`);
+      return;
+    }
+
+    const contentType = res.headers.get("Content-Type") ?? "";
+    if (contentType.includes("application/json")) {
+      const data = await res.json();
+      if (data.error) { onError(data.error); return; }
+      onChunk(data.message.content);
+      onDone(data);
+      return;
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) { onError("No stream reader"); return; }
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.type === "chunk") onChunk(data.content);
+          else if (data.type === "done") onDone(data);
+          else if (data.type === "error") onError(data.error);
+        } catch {}
+      }
+    }
+  },
 };

@@ -1,17 +1,23 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { cn, timeAgo, MOOD_COLORS } from "@/lib/utils";
-import { useSessions, useMessages, useSendMessage, useCreateSession, useAgents } from "@/hooks/useApi";
-import { Send, Plus, ChevronDown, ChevronRight, Cpu, Star } from "lucide-react";
+import { useSessions, useMessages, useCreateSession, useAgents, useChatProvider } from "@/hooks/useApi";
+import { Send, Plus, ChevronDown, ChevronRight, Cpu, Star, Loader2, Zap } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import type { Message } from "@/lib/api";
 
 export default function Chat() {
   const { data: sessions } = useSessions();
   const { data: agents } = useAgents();
+  const { data: chatProvider } = useChatProvider();
   const [activeSession, setActiveSession] = useState<number>(0);
-  const { data: messages } = useMessages(activeSession);
-  const sendMutation = useSendMessage(activeSession);
+  const { data: messages, refetch: refetchMessages } = useMessages(activeSession);
   const createSessionMutation = useCreateSession();
+  const qc = useQueryClient();
   const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState("");
+  const [streamingProvider, setStreamingProvider] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,16 +26,49 @@ export default function Chat() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages, streamingContent]);
 
   const activeAgent = sessions?.find(s => s.id === activeSession)?.agent;
   const msgCount = messages?.length ?? 0;
 
-  const handleSend = () => {
-    if (!input.trim() || !activeSession) return;
-    sendMutation.mutate({ content: input.trim() });
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || !activeSession || isStreaming) return;
+    const content = input.trim();
     setInput("");
-  };
+    setIsStreaming(true);
+    setStreamingContent("");
+    setStreamingProvider(null);
+
+    try {
+      await api.streamChatMessage(
+        activeSession,
+        content,
+        (chunk) => {
+          setStreamingContent(prev => prev + chunk);
+        },
+        (data) => {
+          setIsStreaming(false);
+          setStreamingContent("");
+          setStreamingProvider(data.provider ?? null);
+          refetchMessages();
+          qc.invalidateQueries({ queryKey: ["sessions"] });
+          qc.invalidateQueries({ queryKey: ["agents"] });
+        },
+        (error) => {
+          setIsStreaming(false);
+          setStreamingContent(`Error: ${error}`);
+          setTimeout(() => {
+            setStreamingContent("");
+            refetchMessages();
+          }, 3000);
+        },
+      );
+    } catch (err) {
+      setIsStreaming(false);
+      setStreamingContent("");
+      refetchMessages();
+    }
+  }, [input, activeSession, isStreaming, refetchMessages, qc]);
 
   const handleNewSession = () => {
     if (!agents?.length) return;
@@ -64,23 +103,56 @@ export default function Chat() {
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
         {activeAgent && (
-          <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-white">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg" style={{ border: `2px solid ${MOOD_COLORS[activeAgent.mood] ?? "#6366f1"}` }}>
-              {activeAgent.emoji}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-900">{activeAgent.name}</span>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{activeAgent.lifecycle}</span>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: (MOOD_COLORS[activeAgent.mood] ?? "#6366f1") + "20", color: MOOD_COLORS[activeAgent.mood] ?? "#6366f1" }}>{activeAgent.mood}</span>
+          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-white">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg" style={{ border: `2px solid ${MOOD_COLORS[activeAgent.mood] ?? "#6366f1"}` }}>
+                {activeAgent.emoji}
               </div>
-              <p className="text-[10px] text-gray-400">Lv.{activeAgent.level} · {activeAgent.energy}% energy · {msgCount} messages</p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">{activeAgent.name}</span>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{activeAgent.lifecycle}</span>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: (MOOD_COLORS[activeAgent.mood] ?? "#6366f1") + "20", color: MOOD_COLORS[activeAgent.mood] ?? "#6366f1" }}>{activeAgent.mood}</span>
+                </div>
+                <p className="text-[10px] text-gray-400">Lv.{activeAgent.level} · {activeAgent.energy}% energy · {msgCount} messages</p>
+              </div>
+            </div>
+            {/* Provider indicator */}
+            <div className="flex items-center gap-1.5 text-[10px]">
+              <Zap size={10} className={chatProvider?.configured ? "text-emerald-500" : "text-amber-400"} />
+              <span className={chatProvider?.configured ? "text-emerald-600 font-semibold" : "text-amber-500"}>
+                {chatProvider?.configured ? `${chatProvider.name ?? chatProvider.provider} · ${chatProvider.model}` : "Mock Provider"}
+              </span>
             </div>
           </div>
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
           {(messages ?? []).map(msg => <MessageBubble key={msg.id} msg={msg} agentEmoji={activeAgent?.emoji ?? "🤖"} />)}
+
+          {/* Streaming message */}
+          {isStreaming && streamingContent && (
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-sm flex-shrink-0 mt-1">{activeAgent?.emoji ?? "🤖"}</div>
+              <div className="flex-1 space-y-2">
+                <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap shadow-sm">
+                  {streamingContent}
+                  <span className="inline-block w-1 h-4 bg-indigo-500 ml-0.5 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Loading indicator */}
+          {isStreaming && !streamingContent && (
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-sm flex-shrink-0 mt-1">{activeAgent?.emoji ?? "🤖"}</div>
+              <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-3 text-sm text-gray-400 shadow-sm">
+                <Loader2 size={14} className="animate-spin" />
+                <span>{activeAgent?.name ?? "Agent"} is thinking...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 bg-white">
@@ -92,12 +164,19 @@ export default function Chat() {
               placeholder={`Message ${activeAgent?.name ?? "agent"}… (Enter to send)`}
               className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50 min-h-[44px] max-h-[120px]"
               rows={1}
+              disabled={isStreaming}
             />
-            <button onClick={handleSend} disabled={!input.trim()} className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-40 transition-colors">
-              <Send size={16} />
+            <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-40 transition-colors">
+              {isStreaming ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             </button>
           </div>
-          <p className="text-[10px] text-gray-400 mt-1.5">Use /help for commands · Shift+Enter for new line</p>
+          <p className="text-[10px] text-gray-400 mt-1.5">
+            {chatProvider?.configured
+              ? <span className="text-emerald-500">Connected to {chatProvider.name ?? chatProvider.provider}</span>
+              : <span className="text-amber-400">Mock mode — configure a provider in Settings for real AI</span>
+            }
+            {" · "}Use /help for commands · Shift+Enter for new line
+          </p>
         </div>
       </div>
 
@@ -130,9 +209,21 @@ export default function Chat() {
           <div className="mb-4">
             <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">ACTIVE SKILLS</p>
             <div className="flex flex-wrap gap-1">
-              {["Data Analysis", "Statistical Reasoning", "Data Visualization", "Business Intelligence"].map(s => (
+              {(activeAgent.skills ?? ["Data Analysis", "Statistical Reasoning", "Data Visualization", "Business Intelligence"]).map(s => (
                 <span key={s} className="text-[9px] px-2 py-1 bg-indigo-50 text-indigo-600 rounded-full font-medium">{s}</span>
               ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">PROVIDER</p>
+            <div className="bg-gray-50 rounded-lg p-2.5">
+              <p className="text-[11px] font-semibold text-gray-700">
+                {chatProvider?.configured ? (chatProvider.name ?? chatProvider.provider) : "Mock Provider"}
+              </p>
+              <p className="text-[10px] text-gray-400">
+                {chatProvider?.configured ? chatProvider.model : "No LLM configured"}
+              </p>
             </div>
           </div>
 
