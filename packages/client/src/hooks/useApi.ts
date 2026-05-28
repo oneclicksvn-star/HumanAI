@@ -99,6 +99,52 @@ export const useSettings = () => {
   });
 };
 
+// Channels
+export const useChannels = () => useQuery({ queryKey: ["channels"], queryFn: api.listChannels });
+export const useCreateChannel = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createChannel, onSuccess: () => qc.invalidateQueries({ queryKey: ["channels"] }) }); };
+export const useUpdateChannel = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }: { id: number } & Record<string, unknown>) => api.updateChannel(id, d), onSuccess: () => qc.invalidateQueries({ queryKey: ["channels"] }) }); };
+export const useDeleteChannel = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.deleteChannel, onSuccess: () => qc.invalidateQueries({ queryKey: ["channels"] }) }); };
+
+// Tools
+export const useTools = () => useQuery({ queryKey: ["tools"], queryFn: api.listTools });
+export const useCreateTool = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createTool, onSuccess: () => qc.invalidateQueries({ queryKey: ["tools"] }) }); };
+export const useUpdateTool = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }: { id: number } & Record<string, unknown>) => api.updateTool(id, d), onSuccess: () => qc.invalidateQueries({ queryKey: ["tools"] }) }); };
+
+// MCP Servers
+export const useMcpServers = () => useQuery({ queryKey: ["mcp-servers"], queryFn: api.listMcpServers });
+export const useCreateMcpServer = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createMcpServer, onSuccess: () => qc.invalidateQueries({ queryKey: ["mcp-servers"] }) }); };
+export const useUpdateMcpServer = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }: { id: number } & Record<string, unknown>) => api.updateMcpServer(id, d), onSuccess: () => qc.invalidateQueries({ queryKey: ["mcp-servers"] }) }); };
+
+// Hooks
+export const useHooks = () => useQuery({ queryKey: ["hooks"], queryFn: api.listHooks });
+export const useCreateHook = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createHook, onSuccess: () => qc.invalidateQueries({ queryKey: ["hooks"] }) }); };
+export const useUpdateHook = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }: { id: number } & Record<string, unknown>) => api.updateHook(id, d), onSuccess: () => qc.invalidateQueries({ queryKey: ["hooks"] }) }); };
+
+// Cron Jobs
+export const useCronJobs = () => useQuery({ queryKey: ["cron-jobs"], queryFn: api.listCronJobs });
+export const useCreateCronJob = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createCronJob, onSuccess: () => qc.invalidateQueries({ queryKey: ["cron-jobs"] }) }); };
+export const useUpdateCronJob = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }: { id: number } & Record<string, unknown>) => api.updateCronJob(id, d), onSuccess: () => qc.invalidateQueries({ queryKey: ["cron-jobs"] }) }); };
+
+// Vault
+export const useVaultDocs = () => useQuery({ queryKey: ["vault"], queryFn: api.listVaultDocs });
+export const useCreateVaultDoc = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createVaultDoc, onSuccess: () => qc.invalidateQueries({ queryKey: ["vault"] }) }); };
+export const useUpdateVaultDoc = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }: { id: number } & Record<string, unknown>) => api.updateVaultDoc(id, d), onSuccess: () => qc.invalidateQueries({ queryKey: ["vault"] }) }); };
+export const useDeleteVaultDoc = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.deleteVaultDoc, onSuccess: () => qc.invalidateQueries({ queryKey: ["vault"] }) }); };
+
+// System
+export const useApiKeys = () => useQuery({ queryKey: ["api-keys"], queryFn: api.listApiKeys });
+export const useCreateApiKey = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createApiKey, onSuccess: () => qc.invalidateQueries({ queryKey: ["api-keys"] }) }); };
+export const useDeleteApiKey = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.deleteApiKey, onSuccess: () => qc.invalidateQueries({ queryKey: ["api-keys"] }) }); };
+export const useUsage = () => useQuery({ queryKey: ["usage"], queryFn: api.getUsage });
+export const useUsageSummary = () => useQuery({ queryKey: ["usage-summary"], queryFn: api.getUsageSummary });
+export const useTraces = () => useQuery({ queryKey: ["traces"], queryFn: api.getTraces });
+export const useLogs = (level?: string) => useQuery({ queryKey: ["logs", level], queryFn: () => api.getLogs(level) });
+export const useActivityFeed = () => useQuery({ queryKey: ["activity"], queryFn: api.getActivity });
+export const useBackups = () => useQuery({ queryKey: ["backups"], queryFn: api.getBackups });
+export const useCreateBackup = () => { const qc = useQueryClient(); return useMutation({ mutationFn: api.createBackup, onSuccess: () => qc.invalidateQueries({ queryKey: ["backups"] }) }); };
+export const useDoctor = () => useQuery({ queryKey: ["doctor"], queryFn: api.getDoctor });
+export const useHeartbeat = () => useQuery({ queryKey: ["heartbeat"], queryFn: api.getHeartbeat, refetchInterval: 10000 });
+
 export const useUpdateSettings = () => {
   const qc = useQueryClient();
   return useMutation({

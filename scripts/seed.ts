@@ -1,10 +1,21 @@
 import { db } from "../packages/db/src/index";
-import { agents, personality, sessions, messages, teams, tasks, memoryEntries, knowledgeNodes, knowledgeEdges, agentSkills, dreams, activityLog, providers } from "../packages/db/src/schema";
+import { agents, personality, sessions, messages, teams, tasks, memoryEntries, knowledgeNodes, knowledgeEdges, agentSkills, dreams, activityLog, providers, channels, tools, mcpServers, hooks, cronJobs, vaultDocs, apiKeys, usageLogs, traces, systemLogs, backups } from "../packages/db/src/schema";
 
 async function seed() {
   console.log("🌱 Seeding HumanCore AI database...");
 
   // Clear existing data
+  await db.delete(backups);
+  await db.delete(systemLogs);
+  await db.delete(traces);
+  await db.delete(usageLogs);
+  await db.delete(apiKeys);
+  await db.delete(vaultDocs);
+  await db.delete(cronJobs);
+  await db.delete(hooks);
+  await db.delete(mcpServers);
+  await db.delete(tools);
+  await db.delete(channels);
   await db.delete(activityLog);
   await db.delete(dreams);
   await db.delete(agentSkills);
@@ -166,6 +177,121 @@ async function seed() {
     { name: "Mock Provider", type: "mock", models: ["mock-v1", "mock-v2"], isActive: true },
   ]);
   console.log("  ✓ Default providers");
+
+  // ─── Channels ─────────────────────────────────────────
+  await db.insert(channels).values([
+    { name: "WhatsApp Business", type: "whatsapp", status: "connected", agentId: luna.id, messageCount: 142, lastActivity: new Date(now - 600000).toISOString() },
+    { name: "Telegram Bot", type: "telegram", status: "connected", agentId: atlas.id, messageCount: 89, lastActivity: new Date(now - 1200000).toISOString() },
+    { name: "Discord Server", type: "discord", status: "disconnected", messageCount: 0 },
+    { name: "Slack Workspace", type: "slack", status: "connected", agentId: sage.id, messageCount: 234, lastActivity: new Date(now - 300000).toISOString() },
+    { name: "Email IMAP", type: "email", status: "disconnected", messageCount: 0 },
+    { name: "Webhook Inbound", type: "webhook", status: "connected", messageCount: 56, lastActivity: new Date(now - 7200000).toISOString() },
+  ]);
+  console.log("  ✓ Channels");
+
+  // ─── Tools ────────────────────────────────────────────
+  await db.insert(tools).values([
+    { name: "shell_exec", description: "Execute shell commands in sandboxed environment", category: "system", type: "builtin", isEnabled: true, requiresApproval: true, usageCount: 87 },
+    { name: "web_search", description: "Search the web and return results", category: "web", type: "builtin", isEnabled: true, requiresApproval: false, usageCount: 234 },
+    { name: "file_read", description: "Read file contents from workspace", category: "file", type: "builtin", isEnabled: true, requiresApproval: false, usageCount: 156 },
+    { name: "file_write", description: "Write or modify files in workspace", category: "file", type: "builtin", isEnabled: true, requiresApproval: true, usageCount: 98 },
+    { name: "code_execute", description: "Execute code snippets (JS/Python)", category: "code", type: "builtin", isEnabled: true, requiresApproval: true, usageCount: 64 },
+    { name: "web_fetch", description: "Fetch URL contents and parse HTML", category: "web", type: "builtin", isEnabled: true, requiresApproval: false, usageCount: 112 },
+    { name: "image_generate", description: "Generate images from text prompts", category: "creative", type: "builtin", isEnabled: false, requiresApproval: false, usageCount: 0 },
+    { name: "db_query", description: "Run SQL queries on connected databases", category: "data", type: "custom", isEnabled: true, requiresApproval: true, usageCount: 45 },
+    { name: "github_api", description: "Interact with GitHub repositories", category: "code", type: "mcp", isEnabled: true, requiresApproval: false, usageCount: 78 },
+    { name: "calendar_manage", description: "Create and manage calendar events", category: "productivity", type: "custom", isEnabled: true, requiresApproval: false, usageCount: 23 },
+  ]);
+  console.log("  ✓ Tools");
+
+  // ─── MCP Servers ──────────────────────────────────────
+  await db.insert(mcpServers).values([
+    { name: "PostgreSQL MCP", url: "stdio:///usr/local/bin/mcp-postgres", type: "stdio", status: "running", toolCount: 5 },
+    { name: "GitHub MCP", url: "stdio:///usr/local/bin/mcp-github", type: "stdio", status: "running", toolCount: 12 },
+    { name: "Filesystem MCP", url: "stdio:///usr/local/bin/mcp-fs", type: "stdio", status: "stopped", toolCount: 8 },
+  ]);
+  console.log("  ✓ MCP Servers");
+
+  // ─── Hooks ────────────────────────────────────────────
+  await db.insert(hooks).values([
+    { name: "Tool Approval Gate", event: "pre_tool_use", action: "approve", isActive: true, priority: 10, triggerCount: 43 },
+    { name: "Message Logger", event: "message_received", action: "log", isActive: true, priority: 0, triggerCount: 892 },
+    { name: "Spawn Notifier", event: "agent_spawn", action: "notify", isActive: true, priority: 5, triggerCount: 12 },
+    { name: "Sensitive Content Filter", event: "message_sent", action: "transform", isActive: false, priority: 20, triggerCount: 0 },
+  ]);
+  console.log("  ✓ Hooks");
+
+  // ─── Cron Jobs ────────────────────────────────────────
+  await db.insert(cronJobs).values([
+    { name: "Memory Consolidation", schedule: "0 3 * * *", agentId: luna.id, command: "memory.consolidate", status: "active", lastRun: new Date(now - 86400000).toISOString(), nextRun: new Date(now + 43200000).toISOString(), runCount: 14 },
+    { name: "Team Wellness Check", schedule: "0 9 * * 1-5", agentId: sage.id, command: "team.wellness_check", status: "active", lastRun: new Date(now - 172800000).toISOString(), nextRun: new Date(now + 86400000).toISOString(), runCount: 8 },
+    { name: "Usage Report", schedule: "0 0 * * 0", command: "system.usage_report", status: "active", lastRun: new Date(now - 604800000).toISOString(), nextRun: new Date(now + 259200000).toISOString(), runCount: 4 },
+    { name: "Backup Database", schedule: "0 2 * * *", command: "system.backup", status: "paused", runCount: 0 },
+  ]);
+  console.log("  ✓ Cron Jobs");
+
+  // ─── Vault Docs ───────────────────────────────────────
+  await db.insert(vaultDocs).values([
+    { title: "Project README", content: "# HumanCore AI\n\nA full-stack AI agent platform...", folder: "/", type: "doc", tags: ["#project", "#readme"], size: 45 },
+    { title: "API Reference", content: "## Agents API\n\nGET /api/agents — List all agents...", folder: "/docs", type: "doc", tags: ["#api", "#reference"], size: 120 },
+    { title: "Meeting Notes 05/27", content: "## Sprint Planning\n- Reviewed Q4 results\n- Assigned tasks to Luna and Atlas", folder: "/notes", type: "note", tags: ["#meeting", "#sprint"], agentId: sage.id, size: 89 },
+    { title: "Architecture Decision Record", content: "## ADR-001: Use Bun + Hono\n\nContext: Need lightweight stack...", folder: "/docs/adr", type: "doc", tags: ["#adr", "#architecture"], size: 200 },
+    { title: "Code Snippet: Auth Helper", content: "```typescript\nfunction verifyToken(token: string) {...}\n```", folder: "/snippets", type: "snippet", tags: ["#code", "#auth"], agentId: atlas.id, size: 67 },
+  ]);
+  console.log("  ✓ Vault Docs");
+
+  // ─── API Keys ─────────────────────────────────────────
+  await db.insert(apiKeys).values([
+    { name: "Development Key", keyHash: "hc_dev_abc123", prefix: "hc_dev_abc", permissions: ["read", "write"], isActive: true },
+    { name: "Read-only Dashboard", keyHash: "hc_ro_xyz789", prefix: "hc_ro_xyz7", permissions: ["read"], isActive: true },
+  ]);
+  console.log("  ✓ API Keys");
+
+  // ─── Usage Logs ───────────────────────────────────────
+  const models = ["claude-sonnet-4-20250514", "gpt-4o", "mock-v1"];
+  for (let i = 0; i < 50; i++) {
+    const agentId = [luna.id, atlas.id, sage.id][i % 3];
+    await db.insert(usageLogs).values({
+      agentId,
+      providerId: 1,
+      model: models[i % 3],
+      inputTokens: 500 + Math.floor(Math.random() * 2000),
+      outputTokens: 200 + Math.floor(Math.random() * 1500),
+      cost: Math.random() * 0.05,
+      latencyMs: 200 + Math.floor(Math.random() * 3000),
+      status: Math.random() > 0.05 ? "success" : "error",
+      createdAt: new Date(now - Math.floor(Math.random() * 7 * 86400000)).toISOString(),
+    });
+  }
+  console.log("  ✓ Usage Logs (50 entries)");
+
+  // ─── Traces ───────────────────────────────────────────
+  await db.insert(traces).values([
+    { sessionId: s1.id, agentId: luna.id, type: "llm_call", input: "Analyze Q4 sales data", output: "Top performers: Alpha, Beta, Gamma", model: "claude-sonnet-4-20250514", tokens: 1420, latencyMs: 1892, status: "success" },
+    { sessionId: s1.id, agentId: luna.id, type: "tool_call", input: "web_search: Q4 sales data", output: "Found 3 data sources", tokens: 0, latencyMs: 892, status: "success" },
+    { sessionId: s2.id, agentId: atlas.id, type: "llm_call", input: "Review PR #42 auth fix", output: "Security analysis complete", model: "gpt-4o", tokens: 2100, latencyMs: 2340, status: "success" },
+    { sessionId: s2.id, agentId: atlas.id, type: "memory_recall", input: "PR review standards", output: "Found 1 relevant memory", tokens: 0, latencyMs: 45, status: "success" },
+  ]);
+  console.log("  ✓ Traces");
+
+  // ─── System Logs ──────────────────────────────────────
+  await db.insert(systemLogs).values([
+    { level: "info", source: "server", message: "HumanCore AI server started on port 3001" },
+    { level: "info", source: "agent", message: "Luna activated — mood: positive, energy: 95%", agentId: luna.id },
+    { level: "info", source: "agent", message: "Atlas activated — mood: focused, energy: 72%", agentId: atlas.id },
+    { level: "warn", source: "provider", message: "Mock provider is active — configure real LLM provider for production" },
+    { level: "info", source: "cron", message: "Memory consolidation job completed — 3 memories consolidated" },
+    { level: "error", source: "tool", message: "shell_exec: Command timed out after 30s", agentId: atlas.id },
+    { level: "info", source: "hook", message: "Tool approval gate triggered for shell_exec" },
+    { level: "debug", source: "server", message: "WebSocket connection established from Control UI" },
+  ]);
+  console.log("  ✓ System Logs");
+
+  // ─── Backups ──────────────────────────────────────────
+  await db.insert(backups).values([
+    { name: "backup-initial", type: "full", size: 245760, status: "completed" },
+  ]);
+  console.log("  ✓ Backups");
 
   console.log("\n✅ Seed complete!");
 }

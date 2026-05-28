@@ -186,8 +186,164 @@ export const settings = sqliteTable("settings", {
 export const activityLog = sqliteTable("activity_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   agentId: integer("agent_id"),
-  type: text("type").notNull(), // message, tool_call, memory_store, task_update, mood_change, etc.
+  type: text("type").notNull(),
   summary: text("summary").notNull(),
   metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Channels ────────────────────────────────────────────────────────────────
+
+export const channels = sqliteTable("channels", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // whatsapp, telegram, discord, slack, email, webhook
+  status: text("status", { enum: ["connected", "disconnected", "error"] }).notNull().default("disconnected"),
+  config: text("config", { mode: "json" }).$type<Record<string, unknown>>().default({}),
+  agentId: integer("agent_id"),
+  messageCount: integer("message_count").notNull().default(0),
+  lastActivity: text("last_activity"),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Tools ───────────────────────────────────────────────────────────────────
+
+export const tools = sqliteTable("tools", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("general"), // code, web, file, system, custom
+  type: text("type", { enum: ["builtin", "custom", "mcp"] }).notNull().default("builtin"),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
+  requiresApproval: integer("requires_approval", { mode: "boolean" }).notNull().default(false),
+  usageCount: integer("usage_count").notNull().default(0),
+  schema: text("schema", { mode: "json" }).$type<Record<string, unknown>>(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── MCP Servers ─────────────────────────────────────────────────────────────
+
+export const mcpServers = sqliteTable("mcp_servers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  type: text("type").notNull().default("stdio"), // stdio, http
+  status: text("status", { enum: ["running", "stopped", "error"] }).notNull().default("stopped"),
+  toolCount: integer("tool_count").notNull().default(0),
+  config: text("config", { mode: "json" }).$type<Record<string, unknown>>().default({}),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Hooks ───────────────────────────────────────────────────────────────────
+
+export const hooks = sqliteTable("hooks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  event: text("event").notNull(), // pre_tool_use, post_tool_use, message_received, agent_spawn, etc.
+  action: text("action").notNull(), // approve, log, notify, block, transform
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  priority: integer("priority").notNull().default(0),
+  config: text("config", { mode: "json" }).$type<Record<string, unknown>>().default({}),
+  triggerCount: integer("trigger_count").notNull().default(0),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Cron Jobs ───────────────────────────────────────────────────────────────
+
+export const cronJobs = sqliteTable("cron_jobs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  schedule: text("schedule").notNull(), // cron expression
+  agentId: integer("agent_id"),
+  command: text("command").notNull(),
+  status: text("status", { enum: ["active", "paused", "error"] }).notNull().default("active"),
+  lastRun: text("last_run"),
+  nextRun: text("next_run"),
+  runCount: integer("run_count").notNull().default(0),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Vault (Documents) ──────────────────────────────────────────────────────
+
+export const vaultDocs = sqliteTable("vault_docs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  content: text("content").notNull().default(""),
+  folder: text("folder").notNull().default("/"),
+  type: text("type").notNull().default("note"), // note, doc, snippet, wikilink
+  tags: text("tags", { mode: "json" }).$type<string[]>().default([]),
+  agentId: integer("agent_id"),
+  size: integer("size").notNull().default(0),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── API Keys ────────────────────────────────────────────────────────────────
+
+export const apiKeys = sqliteTable("api_keys", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  keyHash: text("key_hash").notNull(),
+  prefix: text("prefix").notNull(), // first 8 chars for display
+  permissions: text("permissions", { mode: "json" }).$type<string[]>().default(["read"]),
+  lastUsed: text("last_used"),
+  expiresAt: text("expires_at"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Usage Logs ──────────────────────────────────────────────────────────────
+
+export const usageLogs = sqliteTable("usage_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  agentId: integer("agent_id"),
+  providerId: integer("provider_id"),
+  model: text("model"),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  cost: real("cost").notNull().default(0),
+  latencyMs: integer("latency_ms"),
+  status: text("status").notNull().default("success"),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Traces ──────────────────────────────────────────────────────────────────
+
+export const traces = sqliteTable("traces", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  sessionId: integer("session_id"),
+  agentId: integer("agent_id"),
+  type: text("type").notNull(), // llm_call, tool_call, memory_recall, delegation
+  input: text("input"),
+  output: text("output"),
+  model: text("model"),
+  tokens: integer("tokens"),
+  latencyMs: integer("latency_ms"),
+  status: text("status").notNull().default("success"),
+  metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── System Logs ─────────────────────────────────────────────────────────────
+
+export const systemLogs = sqliteTable("system_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  level: text("level", { enum: ["debug", "info", "warn", "error", "fatal"] }).notNull().default("info"),
+  source: text("source").notNull(), // server, agent, provider, tool, hook, cron
+  message: text("message").notNull(),
+  agentId: integer("agent_id"),
+  metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Backups ─────────────────────────────────────────────────────────────────
+
+export const backups = sqliteTable("backups", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  type: text("type", { enum: ["full", "agents", "settings", "memory"] }).notNull().default("full"),
+  size: integer("size").notNull().default(0),
+  status: text("status", { enum: ["completed", "in_progress", "failed"] }).notNull().default("completed"),
+  path: text("path"),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
