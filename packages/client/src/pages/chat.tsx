@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn, timeAgo, MOOD_COLORS } from "@/lib/utils";
-import { useSessions, useMessages, useCreateSession, useAgents, useChatProvider, useSpawnSubAgent, useCreateDelegation, useDelegations, useAgentSpawns } from "@/hooks/useApi";
-import { Send, Plus, ChevronDown, ChevronRight, Cpu, Star, Loader2, Zap, GitBranch, ArrowRight, Users, Brain, Square, Paperclip, Copy, RotateCcw, Trash2, MessageSquare, Search, X, Wrench, Check, Sparkles, BookOpen, Clock, Heart } from "lucide-react";
+import { useSessions, useMessages, useCreateSession, useAgents, useChatProvider, useSpawnSubAgent, useCreateDelegation, useDelegations, useAgentSpawns, useProviders, useSettings } from "@/hooks/useApi";
+import { Send, Plus, ChevronDown, ChevronRight, Cpu, Star, Loader2, Zap, GitBranch, ArrowRight, Users, Brain, Square, Paperclip, Copy, RotateCcw, Trash2, MessageSquare, Search, X, Wrench, Check, Sparkles, BookOpen, Clock, Heart, Settings2, RefreshCw, Lightbulb } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, request } from "@/lib/api";
 import type { Message, Agent } from "@/lib/api";
@@ -18,10 +18,22 @@ const SLASH_COMMANDS = [
   { cmd: "/help", desc: "Show all available commands", icon: Users, usage: "/help" },
 ];
 
+// Quick actions for agent operations
+const QUICK_ACTIONS = [
+  { key: "mood", label: "Mood", icon: Heart, cmd: "/mood", color: "text-pink-500" },
+  { key: "tools", label: "Tools", icon: Wrench, cmd: "/tools", color: "text-amber-500" },
+  { key: "remember", label: "Remember", icon: BookOpen, cmd: "/remember ", color: "text-emerald-500" },
+  { key: "spawn", label: "Spawn", icon: GitBranch, cmd: "/spawn ", color: "text-blue-500" },
+  { key: "delegate", label: "Delegate", icon: ArrowRight, cmd: "/delegate ", color: "text-purple-500" },
+  { key: "plan", label: "Plan", icon: Lightbulb, cmd: "/plan ", color: "text-yellow-500" },
+];
+
 export default function Chat() {
   const { data: sessions, refetch: refetchSessions } = useSessions();
   const { data: agents } = useAgents();
   const { data: chatProvider } = useChatProvider();
+  const { data: providers } = useProviders();
+  const { data: settingsData } = useSettings();
   const [activeSession, setActiveSession] = useState<number>(0);
   const { data: messages, refetch: refetchMessages } = useMessages(activeSession);
   const createSessionMutation = useCreateSession();
@@ -35,10 +47,17 @@ export default function Chat() {
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [clearDisplay, setClearDisplay] = useState(false);
+  const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+  const [sessionModel, setSessionModel] = useState<string | null>(null);
+  const [sessionProvider, setSessionProvider] = useState<string | null>(null);
+  const [availableModels, setAvailableModels] = useState<{id: string; name: string; contextWindow?: number; reasoning?: boolean; vision?: boolean}[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const spawnMutation = useSpawnSubAgent();
   const delegateMutation = useCreateDelegation();
+
+  // Default agent ID from settings
+  const defaultAgentId = settingsData?.defaultAgentId as number | undefined;
 
   const activeAgent = sessions?.find(s => s.id === activeSession)?.agent;
   const activeAgentId = activeAgent?.id ?? 0;
@@ -236,12 +255,21 @@ export default function Chat() {
   }, []);
 
   const handleNewSession = (agentId?: number) => {
-    const targetAgent = agentId ?? agents?.[0]?.id;
+    const targetAgent = agentId ?? defaultAgentId ?? agents?.[0]?.id;
     if (!targetAgent) return;
     createSessionMutation.mutate({ agentId: targetAgent, title: "New Chat" }, {
-      onSuccess: (s) => { setActiveSession(s.id); setShowAgentPicker(false); },
+      onSuccess: (s) => { setActiveSession(s.id); setShowAgentPicker(false); setSessionModel(null); setSessionProvider(null); },
     });
   };
+
+  // Load models when provider is switched
+  useEffect(() => {
+    if (!sessionProvider) { setAvailableModels([]); return; }
+    fetch(`/api/providers/${sessionProvider}/models`)
+      .then(r => r.json())
+      .then(data => setAvailableModels(data.models ?? []))
+      .catch(() => setAvailableModels([]));
+  }, [sessionProvider]);
 
   const handleDeleteSession = async (sessionId: number) => {
     try {
@@ -336,38 +364,66 @@ export default function Chat() {
       <div className="flex-1 flex flex-col">
         {/* Top bar */}
         {activeAgent ? (
-          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-white">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg" style={{ border: `2px solid ${MOOD_COLORS[activeAgent.mood] ?? "#6366f1"}` }}>
-                {activeAgent.emoji}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-gray-900">{activeAgent.name}</span>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{activeAgent.lifecycle}</span>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: (MOOD_COLORS[activeAgent.mood] ?? "#6366f1") + "20", color: MOOD_COLORS[activeAgent.mood] ?? "#6366f1" }}>{activeAgent.mood}</span>
+          <div className="px-6 py-3 border-b border-gray-100 bg-white space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg" style={{ border: `2px solid ${MOOD_COLORS[activeAgent.mood] ?? "#6366f1"}` }}>
+                  {activeAgent.emoji}
                 </div>
-                <p className="text-[10px] text-gray-400">Lv.{activeAgent.level} · {activeAgent.energy}% energy · {msgCount} messages</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-gray-900">{activeAgent.name}</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{activeAgent.lifecycle}</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: (MOOD_COLORS[activeAgent.mood] ?? "#6366f1") + "20", color: MOOD_COLORS[activeAgent.mood] ?? "#6366f1" }}>{activeAgent.mood}</span>
+                  </div>
+                  {/* Agent introduction / description */}
+                  <p className="text-[10px] text-gray-400">
+                    {activeAgent.description ?? activeAgent.purpose ?? `Lv.${activeAgent.level} · ${activeAgent.energy}% energy`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Activity / Status indicator */}
+                {isStreaming ? (
+                  <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
+                    <Brain size={12} className="animate-pulse" />
+                    <span>Thinking...</span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-gray-300">Ready</span>
+                )}
+                {/* Model/Provider switcher button */}
+                <button onClick={() => setShowModelSwitcher(!showModelSwitcher)}
+                  className="flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-colors">
+                  <Zap size={10} className={chatProvider?.configured ? "text-emerald-500" : "text-amber-400"} />
+                  <span className={chatProvider?.configured ? "text-emerald-600 font-semibold" : "text-amber-500"}>
+                    {sessionModel ?? chatProvider?.model ?? "Default"}
+                  </span>
+                  <ChevronDown size={10} className="text-gray-300" />
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Activity / Status indicator */}
-              {isStreaming ? (
-                <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
-                  <Brain size={12} className="animate-pulse" />
-                  <span>Thinking...</span>
-                </div>
-              ) : (
-                <span className="text-[10px] text-gray-300">Ready</span>
-              )}
-              {/* Provider indicator */}
-              <div className="flex items-center gap-1.5 text-[10px]">
-                <Zap size={10} className={chatProvider?.configured ? "text-emerald-500" : "text-amber-400"} />
-                <span className={chatProvider?.configured ? "text-emerald-600 font-semibold" : "text-amber-500"}>
-                  {chatProvider?.configured ? `${chatProvider.name ?? chatProvider.provider} · ${chatProvider.model}` : "Mock Provider"}
-                </span>
+
+            {/* Model/Provider switcher dropdown */}
+            {showModelSwitcher && (
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-100">
+                <select value={sessionProvider ?? ""} onChange={e => { setSessionProvider(e.target.value || null); setSessionModel(null); }}
+                  className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-300">
+                  <option value="">Provider...</option>
+                  {(providers ?? []).map((p: any) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <select value={sessionModel ?? ""} onChange={e => setSessionModel(e.target.value || null)}
+                  className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-300">
+                  <option value="">{availableModels.length ? "Select model..." : sessionProvider ? "Loading..." : "Select provider first"}</option>
+                  {availableModels.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}{m.reasoning ? " 🧠" : ""}{m.vision ? " 👁" : ""}</option>
+                  ))}
+                </select>
+                <button onClick={() => setShowModelSwitcher(false)} className="p-1 text-gray-400 hover:text-gray-600"><X size={14} /></button>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           /* Empty state - no session selected */
@@ -400,7 +456,17 @@ export default function Chat() {
                 <div className="text-center py-12">
                   <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3 text-xl">{activeAgent.emoji}</div>
                   <p className="text-sm text-gray-500 font-medium">Chat with {activeAgent.name}</p>
-                  <p className="text-xs text-gray-300 mt-1">{activeAgent.description ?? activeAgent.purpose ?? "Send a message to start the conversation"}</p>
+                  <p className="text-xs text-gray-300 mt-1 max-w-md mx-auto">{activeAgent.description ?? activeAgent.purpose ?? "Send a message to start the conversation"}</p>
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+                    {QUICK_ACTIONS.map(qa => (
+                      <button key={qa.key} onClick={() => { setInput(qa.cmd); inputRef.current?.focus(); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-colors text-xs text-gray-500 hover:text-gray-700">
+                        <qa.icon size={12} className={qa.color} />
+                        <span>{qa.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -611,6 +677,24 @@ export default function Chat() {
               <h3 className="text-sm font-bold text-gray-800">New Chat — Choose Agent</h3>
               <button onClick={() => setShowAgentPicker(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
             </div>
+            {/* Default agent quick start */}
+            {defaultAgentId && (() => {
+              const defAgent = agents?.find(a => a.id === defaultAgentId);
+              return defAgent ? (
+                <button onClick={() => handleNewSession(defAgent.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3 mb-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors text-left">
+                  <span className="text-2xl">{defAgent.emoji}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-indigo-700">{defAgent.name}</p>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-700">Default</span>
+                    </div>
+                    <p className="text-xs text-indigo-400">{defAgent.purpose ?? defAgent.nature ?? "Default agent"}</p>
+                  </div>
+                  <Star size={14} className="text-indigo-400" />
+                </button>
+              ) : null;
+            })()}
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {(agents ?? []).map(a => (
                 <button key={a.id} onClick={() => handleNewSession(a.id)}

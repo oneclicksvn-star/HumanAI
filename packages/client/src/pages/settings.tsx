@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useSettings, useUpdateSettings } from "@/hooks/useApi";
+import { useSettings, useUpdateSettings, useAgents } from "@/hooks/useApi";
 import { Save, Moon, Sun, Globe, Shield, Palette, Brain, Zap, Bell, Database } from "lucide-react";
 
 const SECTIONS = [
@@ -15,6 +15,7 @@ const SECTIONS = [
 export default function SettingsPage() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
+  const { data: agents } = useAgents();
   const [section, setSection] = useState("general");
   const [dirty, setDirty] = useState(false);
 
@@ -24,6 +25,7 @@ export default function SettingsPage() {
     autoSave: settings?.autoSave ?? true,
     notifications: settings?.notifications ?? true,
     defaultProvider: settings?.defaultProvider ?? "mock",
+    defaultAgentId: settings?.defaultAgentId ?? "",
     maxTokens: settings?.maxTokens ?? 4096,
     temperature: settings?.temperature ?? 0.7,
   });
@@ -135,6 +137,16 @@ export default function SettingsPage() {
                 <option value="deepseek">DeepSeek</option>
                 <option value="groq">Groq</option>
               </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-2 block">Default Agent</label>
+              <select value={form.defaultAgentId} onChange={e => update("defaultAgentId", e.target.value ? parseInt(e.target.value) : "")} className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm w-64 focus:outline-none focus:border-indigo-300">
+                <option value="">None (always ask)</option>
+                {(agents ?? []).map((a: any) => (
+                  <option key={a.id} value={a.id}>{a.emoji} {a.name}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-gray-400 mt-1">Agent dùng mặc định khi tạo chat mới không chọn agent</p>
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-2 block">Max Tokens</label>

@@ -288,9 +288,30 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
   );
 }
 
+type ModelOption = { id: string; name: string; contextWindow?: number; reasoning?: boolean; vision?: boolean };
+
 function ConfigTab({ config, providers, onSave, saving }: any) {
   const [editSection, setEditSection] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, unknown>>({});
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  // Load models when provider changes in LLM edit
+  useEffect(() => {
+    const providerId = form.providerId;
+    if (editSection !== "llm" || !providerId) {
+      setAvailableModels([]);
+      return;
+    }
+    setLoadingModels(true);
+    fetch(`/api/providers/${providerId}/models`)
+      .then(r => r.json())
+      .then(data => {
+        setAvailableModels(data.models ?? []);
+      })
+      .catch(() => setAvailableModels([]))
+      .finally(() => setLoadingModels(false));
+  }, [form.providerId, editSection]);
 
   if (!config) return <div className="text-gray-400 text-sm">Loading configuration...</div>;
 
@@ -310,8 +331,27 @@ function ConfigTab({ config, providers, onSave, saving }: any) {
       <ConfigSection title="LLM Configuration" icon={<Brain size={14} />} editing={editSection === "llm"} onEdit={() => startEdit("llm", config.llm)} onSave={save} onCancel={() => setEditSection(null)} saving={saving}>
         {editSection === "llm" ? (
           <div className="space-y-3">
-            <SelectField label="Provider" value={form.providerId as string ?? ""} onChange={v => setForm({ ...form, providerId: v || null })} options={[{ value: "", label: "Default" }, ...providers.map((p: any) => ({ value: p.id.toString(), label: p.name }))]} />
-            <Field label="Model" value={form.model as string ?? ""} onChange={v => setForm({ ...form, model: v || null })} placeholder="e.g. claude-3.5-sonnet" />
+            <SelectField label="Provider" value={form.providerId as string ?? ""} onChange={v => setForm({ ...form, providerId: v || null, model: null })} options={[{ value: "", label: "Default" }, ...providers.map((p: any) => ({ value: p.id.toString(), label: p.name }))]} />
+            <div>
+              <label className="text-[10px] font-semibold text-gray-500 mb-1 block">
+                Model {loadingModels && <span className="text-indigo-400 animate-pulse text-[9px]">loading...</span>}
+              </label>
+              {availableModels.length > 0 ? (
+                <select value={form.model as string ?? ""} onChange={e => setForm({ ...form, model: e.target.value || null })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-indigo-300">
+                  <option value="">Select model...</option>
+                  {availableModels.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} {m.reasoning ? "🧠" : ""}{m.vision ? "👁" : ""}{m.contextWindow ? ` (${(m.contextWindow / 1000).toFixed(0)}K)` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input value={form.model as string ?? ""} onChange={e => setForm({ ...form, model: e.target.value || null })}
+                  placeholder={form.providerId ? "No models found — type model ID" : "Select provider first"}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-indigo-300" />
+              )}
+            </div>
             <NumberField label="Temperature" value={form.temperature as number ?? 0.7} onChange={v => setForm({ ...form, temperature: v })} min={0} max={2} step={0.1} />
             <NumberField label="Max Tokens" value={form.maxTokens as number ?? 4096} onChange={v => setForm({ ...form, maxTokens: v })} min={256} max={200000} step={256} />
             <SelectField label="Thinking Level" value={form.thinkingLevel as string ?? "off"} onChange={v => setForm({ ...form, thinkingLevel: v })} options={[{ value: "off", label: "Off" }, { value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }]} />
