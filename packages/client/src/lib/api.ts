@@ -371,11 +371,14 @@ export const api = {
   getChatProvider: () => request<{ provider: string; model: string; name?: string; configured: boolean }>("/chat/provider"),
   sendChatMessage: (sessionId: number, content: string) => request<{ message: Message; userMessage: Message; provider: string }>(`/chat/${sessionId}/send`, { method: "POST", body: JSON.stringify({ content }) }),
 
-  streamChatMessage: async (sessionId: number, content: string, onChunk: (chunk: string) => void, onDone: (data: { message: Message; usage?: { inputTokens: number; outputTokens: number; latencyMs: number }; provider: string }) => void, onError: (error: string) => void) => {
+  streamChatMessage: async (sessionId: number, content: string, onChunk: (chunk: string) => void, onDone: (data: { message: Message; usage?: { inputTokens: number; outputTokens: number; latencyMs: number }; provider: string }) => void, onError: (error: string) => void, options?: { providerId?: string | null; model?: string | null }) => {
+    const payload: Record<string, unknown> = { content };
+    if (options?.providerId) payload.providerId = options.providerId;
+    if (options?.model) payload.model = options.model;
     const res = await fetch(`${BASE}/chat/${sessionId}/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {

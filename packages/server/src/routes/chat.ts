@@ -13,6 +13,8 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
   const sessionId = Number(c.req.param("sessionId"));
   const body = await c.req.json();
   const userContent = body.content as string;
+  const overrideProviderId = body.providerId as string | undefined;
+  const overrideModel = body.model as string | undefined;
 
   if (!userContent?.trim()) {
     return c.json({ error: "Content is required" }, 400);
@@ -38,8 +40,8 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
     await db.update(sessions).set({ title }).where(eq(sessions.id, sessionId));
   }
 
-  // Get active LLM model
-  const activeModel = await getActiveModel();
+  // Get active LLM model (with optional override from client)
+  const activeModel = await getActiveModel(overrideProviderId ?? agent.providerId, overrideModel ?? agent.model);
   if (!activeModel) {
     // Fallback: mock response when no provider is configured
     const mockResponse = generateMockResponse(agent.name, agent.mood, userContent);

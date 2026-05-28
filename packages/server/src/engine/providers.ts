@@ -27,12 +27,21 @@ export function createModel(type: ProviderType, apiKey: string, model: string, b
   }
 }
 
-export async function getActiveModel(): Promise<{ model: LanguageModelV1; provider: typeof providers.$inferSelect } | null> {
+export async function getActiveModel(overrideProviderId?: string | null, overrideModel?: string | null): Promise<{ model: LanguageModelV1; provider: typeof providers.$inferSelect } | null> {
+  // If override provider/model specified, use those
+  if (overrideProviderId) {
+    const [p] = await db.select().from(providers).where(eq(providers.id, Number(overrideProviderId)));
+    if (p && p.apiKey) {
+      const modelName = overrideModel ?? p.models?.[0] ?? getDefaultModel(p.type as ProviderType);
+      return { model: createModel(p.type as ProviderType, p.apiKey, modelName, p.baseUrl), provider: p };
+    }
+  }
+
   const rows = await db.select().from(providers).where(eq(providers.isActive, true));
   const active = rows.find(p => p.apiKey && p.type !== "mock");
   if (!active || !active.apiKey) return null;
 
-  const modelName = active.models?.[0] ?? getDefaultModel(active.type as ProviderType);
+  const modelName = overrideModel ?? active.models?.[0] ?? getDefaultModel(active.type as ProviderType);
   return {
     model: createModel(active.type as ProviderType, active.apiKey, modelName, active.baseUrl),
     provider: active,

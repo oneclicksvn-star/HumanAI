@@ -241,13 +241,14 @@ export default function Chat() {
             refetchMessages();
           }, 3000);
         },
+        { providerId: sessionProvider, model: sessionModel },
       );
     } catch (err) {
       setIsStreaming(false);
       setStreamingContent("");
       refetchMessages();
     }
-  }, [input, activeSession, isStreaming, refetchMessages, qc, handleSlashCommand]);
+  }, [input, activeSession, isStreaming, refetchMessages, qc, handleSlashCommand, sessionProvider, sessionModel]);
 
   const handleAbort = useCallback(() => {
     setIsStreaming(false);
@@ -414,7 +415,7 @@ export default function Chat() {
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
-                <select value={sessionModel ?? ""} onChange={e => setSessionModel(e.target.value || null)}
+                <select value={sessionModel ?? ""} onChange={e => { setSessionModel(e.target.value || null); if (e.target.value) setShowModelSwitcher(false); }}
                   className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-300">
                   <option value="">{availableModels.length ? "Select model..." : sessionProvider ? "Loading..." : "Select provider first"}</option>
                   {availableModels.map(m => (
