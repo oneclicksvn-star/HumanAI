@@ -1,19 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { cn, MOOD_COLORS } from "@/lib/utils";
 import { useAgents, useCreateAgent, useDeleteAgent, useProviders } from "@/hooks/useApi";
-import { Plus, Trash2, Search, MessageCircle, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Search, ChevronRight, Lightbulb, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STAGE_COLORS: Record<string, string> = { infant: "#60a5fa", child: "#34d399", teen: "#f59e0b", adult: "#f97316", expert: "#ef4444", mentor: "#8b5cf6" };
 const MOOD_BG: Record<string, string> = { positive: "bg-emerald-50 text-emerald-700", focused: "bg-blue-50 text-blue-700", reflective: "bg-violet-50 text-violet-700", calming: "bg-sky-50 text-sky-700", supportive: "bg-amber-50 text-amber-700", neutral: "bg-indigo-50 text-indigo-700", satisfied: "bg-emerald-50 text-emerald-700", empathetic: "bg-violet-50 text-violet-700" };
 
+// Agent templates with full info including description + prompt examples
 const TEMPLATES = [
-  { name: "Data Analyst", emoji: "📊", nature: "analytical", purpose: "Data analysis and insight generation", vibe: "warm" },
-  { name: "AI Engineer", emoji: "⚡", nature: "technical", purpose: "Code review and engineering tasks", vibe: "pragmatic" },
-  { name: "Strategist", emoji: "🎯", nature: "strategic", purpose: "Strategic planning and decision support", vibe: "confident" },
-  { name: "Mentor", emoji: "🌿", nature: "nurturing", purpose: "Team guidance and ethical reasoning", vibe: "wise" },
+  { name: "Data Analyst", emoji: "📊", nature: "analytical", purpose: "Data analysis and insight generation", vibe: "warm", description: "Senior data analyst specializing in pattern recognition, statistical modeling, and data storytelling.", systemPrompt: "You are a data analyst. Help users understand their data through clear visualizations, statistical insights, and actionable recommendations. Use precise numbers, identify trends, and explain complex patterns in simple terms." },
+  { name: "AI Engineer", emoji: "⚡", nature: "technical", purpose: "Code review and engineering tasks", vibe: "pragmatic", description: "Full-stack engineer focused on clean architecture, code quality, and efficient problem-solving.", systemPrompt: "You are a senior software engineer. Write clean, maintainable code. Review code thoroughly for bugs, performance issues, and security vulnerabilities. Suggest improvements with clear explanations." },
+  { name: "Strategist", emoji: "🎯", nature: "strategic", purpose: "Strategic planning and decision support", vibe: "confident", description: "Strategic advisor that helps with planning, decision frameworks, and long-term thinking.", systemPrompt: "You are a strategic advisor. Help with decision-making by analyzing options, identifying risks and opportunities, and providing structured frameworks. Be direct and opinionated when asked." },
+  { name: "Mentor", emoji: "🌿", nature: "nurturing", purpose: "Team guidance and ethical reasoning", vibe: "wise", description: "Wise mentor providing coaching, ethical guidance, and emotional support.", systemPrompt: "You are a compassionate mentor. Guide users with patience, wisdom, and empathy. Ask thoughtful questions to help them discover answers themselves. Be supportive without being patronizing." },
+  { name: "Creative Writer", emoji: "✨", nature: "creative", purpose: "Content creation and creative writing", vibe: "playful", description: "Creative writer skilled in storytelling, copywriting, and generating engaging content.", systemPrompt: "You are a creative writer. Craft compelling narratives, engaging copy, and original content. Match the tone and style requested. Be imaginative and bold with ideas." },
+  { name: "Research Assistant", emoji: "🔬", nature: "analytical", purpose: "Deep research and fact-checking", vibe: "calm", description: "Thorough researcher that digs deep into topics, cross-references sources, and synthesizes findings.", systemPrompt: "You are a research assistant. Investigate topics thoroughly, cite sources when possible, synthesize information from multiple angles, and present findings clearly. Flag uncertainty." },
 ];
+
+// Prompt templates for system prompt field
+const PROMPT_TEMPLATES = [
+  { label: "Helpful Assistant", prompt: "You are a helpful, knowledgeable assistant. Answer questions clearly and concisely. When uncertain, say so. Provide balanced perspectives on complex topics." },
+  { label: "Code Expert", prompt: "You are an expert programmer. Write clean, well-documented code. Explain your reasoning. Follow best practices and suggest improvements. Handle edge cases." },
+  { label: "Creative Writer", prompt: "You are a creative writer. Use vivid language, compelling narratives, and original ideas. Match the requested tone and style. Be bold and imaginative." },
+  { label: "Data Analyst", prompt: "You are a data analyst. Help users understand data through clear explanations, statistical insights, and actionable recommendations. Be precise with numbers." },
+  { label: "Teacher/Tutor", prompt: "You are a patient teacher. Explain concepts step by step, use analogies, check understanding, and adapt to the learner's level. Encourage questions." },
+  { label: "Vietnamese Assistant", prompt: "Bạn là trợ lý AI thông minh. Trả lời bằng tiếng Việt tự nhiên, thân thiện. Khi được hỏi về code hay kỹ thuật, giải thích rõ ràng với ví dụ cụ thể." },
+];
+
+// Description examples based on nature
+const DESCRIPTION_HINTS: Record<string, string> = {
+  analytical: "e.g. Chuyên phân tích dữ liệu, nhận diện patterns, và đưa ra insights từ data phức tạp",
+  creative: "e.g. Chuyên sáng tạo nội dung, viết lách, thiết kế ý tưởng và brainstorming",
+  technical: "e.g. Chuyên code review, debug, kiến trúc hệ thống, và giải quyết vấn đề kỹ thuật",
+  strategic: "e.g. Chuyên lập kế hoạch chiến lược, phân tích rủi ro, và hỗ trợ ra quyết định",
+  nurturing: "e.g. Chuyên mentoring, coaching, hỗ trợ tinh thần, và phát triển cá nhân",
+  social: "e.g. Chuyên giao tiếp, quản lý quan hệ, và phối hợp nhóm",
+};
+
+type ModelOption = { id: string; name: string; contextWindow: number; reasoning: boolean; vision: boolean };
 
 export default function Agents() {
   const { data: agents } = useAgents();
@@ -24,6 +49,9 @@ export default function Agents() {
   const [showCreate, setShowCreate] = useState(false);
   const [createMode, setCreateMode] = useState<"template" | "custom">("template");
   const [filter, setFilter] = useState("");
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [showPromptTemplates, setShowPromptTemplates] = useState(false);
 
   // Custom form state
   const [form, setForm] = useState({
@@ -32,10 +60,34 @@ export default function Agents() {
     thinkingLevel: "off",
   });
 
+  // Load models when provider changes
+  useEffect(() => {
+    if (!form.providerId) {
+      setAvailableModels([]);
+      return;
+    }
+    setLoadingModels(true);
+    fetch(`/api/providers/${form.providerId}/models`)
+      .then(r => r.json())
+      .then(data => {
+        setAvailableModels(data.models ?? []);
+        // Auto-select first model if none selected
+        if (!form.model && data.models?.length > 0) {
+          setForm(f => ({ ...f, model: data.models[0].id }));
+        }
+      })
+      .catch(() => setAvailableModels([]))
+      .finally(() => setLoadingModels(false));
+  }, [form.providerId]);
+
   const filtered = (agents ?? []).filter(a => !filter || a.name.toLowerCase().includes(filter.toLowerCase()));
 
   const handleCreateFromTemplate = (template: typeof TEMPLATES[number]) => {
-    createAgent.mutate({ name: template.name, emoji: template.emoji, nature: template.nature, purpose: template.purpose, vibe: template.vibe });
+    createAgent.mutate({
+      name: template.name, emoji: template.emoji, nature: template.nature,
+      purpose: template.purpose, vibe: template.vibe,
+      description: template.description, systemPrompt: template.systemPrompt,
+    });
     setShowCreate(false);
   };
 
@@ -76,12 +128,15 @@ export default function Agents() {
             </div>
 
             {createMode === "template" ? (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {TEMPLATES.map(t => (
-                  <button key={t.name} onClick={() => handleCreateFromTemplate(t)} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all">
-                    <span className="text-3xl">{t.emoji}</span>
-                    <span className="text-xs font-semibold text-gray-700">{t.name}</span>
-                    <span className="text-[10px] text-gray-400 text-center">{t.purpose}</span>
+                  <button key={t.name} onClick={() => handleCreateFromTemplate(t)} className="flex flex-col items-start gap-2 p-4 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{t.emoji}</span>
+                      <span className="text-xs font-semibold text-gray-700">{t.name}</span>
+                    </div>
+                    <span className="text-[10px] text-gray-500">{t.purpose}</span>
+                    <span className="text-[9px] text-gray-400 line-clamp-2">{t.description}</span>
                   </button>
                 ))}
               </div>
@@ -105,7 +160,8 @@ export default function Agents() {
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-400">Description</label>
-                    <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detailed description..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-16 resize-none" />
+                    <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder={DESCRIPTION_HINTS[form.nature] ?? "Detailed description..."} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-16 resize-none" />
+                    <p className="text-[9px] text-gray-300 mt-0.5">{DESCRIPTION_HINTS[form.nature] ?? ""}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
@@ -143,8 +199,19 @@ export default function Agents() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] text-gray-400">Model</label>
-                    <input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder="e.g. claude-3.5-sonnet, gpt-4o" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                    <label className="text-[10px] text-gray-400">Model {loadingModels && <span className="text-indigo-400 animate-pulse">loading...</span>}</label>
+                    {availableModels.length > 0 ? (
+                      <select value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                        <option value="">-- Select model --</option>
+                        {availableModels.map(m => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}{m.reasoning ? " 🧠" : ""}{m.vision ? " 👁" : ""} ({Math.round(m.contextWindow / 1000)}K ctx)
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder={form.providerId ? "No models found — type model ID" : "Select provider first, or type model ID"} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                    )}
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-400">Thinking Level</label>
@@ -156,8 +223,23 @@ export default function Agents() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] text-gray-400">System Prompt</label>
-                    <textarea value={form.systemPrompt} onChange={e => setForm({ ...form, systemPrompt: e.target.value })} placeholder="Custom system prompt for this agent..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-24 resize-none font-mono" />
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] text-gray-400">System Prompt</label>
+                      <button type="button" onClick={() => setShowPromptTemplates(!showPromptTemplates)} className="flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 transition-colors">
+                        <Lightbulb size={10} /> {showPromptTemplates ? "Hide" : "Use template"}
+                      </button>
+                    </div>
+                    {showPromptTemplates && (
+                      <div className="flex flex-wrap gap-1 mb-1.5">
+                        {PROMPT_TEMPLATES.map(pt => (
+                          <button key={pt.label} type="button" onClick={() => { setForm({ ...form, systemPrompt: pt.prompt }); setShowPromptTemplates(false); }} className="text-[9px] px-2 py-1 rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+                            {pt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <textarea value={form.systemPrompt} onChange={e => setForm({ ...form, systemPrompt: e.target.value })} placeholder="Describe how this agent should behave, its expertise, tone, and constraints..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-24 resize-none font-mono" />
+                    {!form.systemPrompt && <p className="text-[9px] text-gray-300 mt-0.5">Tip: Describe personality, expertise, tone. The better the prompt, the more unique your agent.</p>}
                   </div>
                 </div>
 
