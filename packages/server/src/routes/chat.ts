@@ -32,6 +32,12 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
     content: userContent,
   }).returning();
 
+  // Auto-generate session title from first user message
+  if (session.title === "New Chat") {
+    const title = userContent.slice(0, 60) + (userContent.length > 60 ? "..." : "");
+    await db.update(sessions).set({ title }).where(eq(sessions.id, sessionId));
+  }
+
   // Get active LLM model
   const activeModel = await getActiveModel();
   if (!activeModel) {
