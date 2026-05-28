@@ -19,6 +19,7 @@ import { vaultRoutes } from "./routes/vault";
 import { systemRoutes } from "./routes/system";
 import { chatRoutes } from "./routes/chat";
 import { spawnRoutes } from "./routes/spawn";
+import { consolidationRoutes } from "./routes/consolidation";
 
 const app = new Hono();
 
@@ -47,6 +48,7 @@ app.route("/api", vaultRoutes);
 app.route("/api", systemRoutes);
 app.route("/api", chatRoutes);
 app.route("/api", spawnRoutes);
+app.route("/api", consolidationRoutes);
 
 const port = Number(process.env.PORT ?? 3001);
 

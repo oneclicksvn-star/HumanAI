@@ -112,6 +112,9 @@ export const memoryEntries = sqliteTable("memory_entries", {
   importance: real("importance").notNull().default(0.5),
   recallCount: integer("recall_count").notNull().default(0),
   decayFactor: real("decay_factor").notNull().default(1.0),
+  sourceSessionId: integer("source_session_id"),
+  lastRecalledAt: text("last_recalled_at"),
+  consolidated: integer("consolidated", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 
@@ -378,6 +381,23 @@ export const subAgentSpawns = sqliteTable("sub_agent_spawns", {
   result: text("result"),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
   completedAt: text("completed_at"),
+});
+
+// ─── Consolidation Jobs ──────────────────────────────────────────────────────
+
+export const consolidationJobs = sqliteTable("consolidation_jobs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  type: text("type", { enum: ["episodic", "semantic", "dreaming", "full"] }).notNull().default("full"),
+  status: text("status", { enum: ["pending", "running", "completed", "failed"] }).notNull().default("pending"),
+  memoriesProcessed: integer("memories_processed").notNull().default(0),
+  entitiesExtracted: integer("entities_extracted").notNull().default(0),
+  dreamsGenerated: integer("dreams_generated").notNull().default(0),
+  memoriesMerged: integer("memories_merged").notNull().default(0),
+  error: text("error"),
+  startedAt: text("started_at"),
+  completedAt: text("completed_at"),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 
 // ─── Backups ─────────────────────────────────────────────────────────────────

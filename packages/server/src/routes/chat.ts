@@ -5,6 +5,7 @@ import { messages, sessions, agents, activityLog, usageLogs } from "@humancore/d
 import { eq, asc } from "drizzle-orm";
 import { getActiveModel } from "../engine/providers";
 import { buildSystemPrompt, getMoodTemperature, detectMoodFromContent } from "../engine/prompts";
+import { createQuickMemory } from "../engine/memory";
 
 export const chatRoutes = new Hono();
 
@@ -156,6 +157,15 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
             type: "chat",
             summary: `${agent.name} — Responded to user message (${outputTokens} tokens, ${latencyMs}ms)`,
           });
+
+          // Create episodic memory if conversation is important enough
+          await createQuickMemory(
+            agent.id,
+            sessionId,
+            userContent,
+            fullContent,
+            newMood ?? agent.mood
+          );
 
           // Send completion event
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
