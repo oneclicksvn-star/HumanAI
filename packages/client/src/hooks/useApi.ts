@@ -152,6 +152,36 @@ export const useCreateBackup = () => { const qc = useQueryClient(); return useMu
 export const useDoctor = () => useQuery({ queryKey: ["doctor"], queryFn: api.getDoctor });
 export const useHeartbeat = () => useQuery({ queryKey: ["heartbeat"], queryFn: api.getHeartbeat, refetchInterval: 10000 });
 
+// Sub-Agent Spawns
+export const useAgentSpawns = (agentId: number) => useQuery({ queryKey: ["spawns", agentId], queryFn: () => api.getAgentSpawns(agentId), enabled: agentId > 0 });
+export const useSpawnSubAgent = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ agentId, ...data }: { agentId: number } & { purpose: string; mode?: string; name?: string; emoji?: string; sessionId?: number }) => api.spawnSubAgent(agentId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["spawns"] }); qc.invalidateQueries({ queryKey: ["agents"] }); qc.invalidateQueries({ queryKey: ["sessions"] }); },
+  });
+};
+
+// Delegations
+export const useDelegations = (agentId?: number) => useQuery({ queryKey: ["delegations", agentId], queryFn: () => api.listDelegations(agentId) });
+export const useCreateDelegation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.createDelegation,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["delegations"] }); qc.invalidateQueries({ queryKey: ["messages"] }); qc.invalidateQueries({ queryKey: ["sessions"] }); },
+  });
+};
+export const useExecuteDelegation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.executeDelegation,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["delegations"] }); qc.invalidateQueries({ queryKey: ["messages"] }); },
+  });
+};
+
+// Agent Links
+export const useAgentLinks = (agentId?: number) => useQuery({ queryKey: ["agent-links", agentId], queryFn: () => api.listAgentLinks(agentId) });
+
 export const useUpdateSettings = () => {
   const qc = useQueryClient();
   return useMutation({

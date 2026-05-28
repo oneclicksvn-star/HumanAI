@@ -336,6 +336,50 @@ export const systemLogs = sqliteTable("system_logs", {
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 
+// ─── Agent Links (directional relationships between agents) ──────────────────
+
+export const agentLinks = sqliteTable("agent_links", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  fromAgentId: integer("from_agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  toAgentId: integer("to_agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  type: text("type", { enum: ["delegation", "supervision", "collaboration", "mentorship"] }).notNull().default("delegation"),
+  strength: real("strength").notNull().default(1.0),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Delegations ─────────────────────────────────────────────────────────────
+
+export const delegations = sqliteTable("delegations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  fromAgentId: integer("from_agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  toAgentId: integer("to_agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  sessionId: integer("session_id").references(() => sessions.id, { onDelete: "set null" }),
+  taskDescription: text("task_description").notNull(),
+  context: text("context"),
+  status: text("status", { enum: ["pending", "accepted", "in_progress", "completed", "rejected", "failed"] }).notNull().default("pending"),
+  priority: text("priority", { enum: ["low", "medium", "high", "urgent"] }).notNull().default("medium"),
+  result: text("result"),
+  startedAt: text("started_at"),
+  completedAt: text("completed_at"),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// ─── Sub-Agent Spawns ────────────────────────────────────────────────────────
+
+export const subAgentSpawns = sqliteTable("sub_agent_spawns", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  parentAgentId: integer("parent_agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  childAgentId: integer("child_agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  sessionId: integer("session_id").references(() => sessions.id, { onDelete: "set null" }),
+  purpose: text("purpose").notNull(),
+  mode: text("mode", { enum: ["isolated", "fork", "shared"] }).notNull().default("isolated"),
+  status: text("status", { enum: ["active", "completed", "terminated", "error"] }).notNull().default("active"),
+  depth: integer("depth").notNull().default(1),
+  result: text("result"),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+  completedAt: text("completed_at"),
+});
+
 // ─── Backups ─────────────────────────────────────────────────────────────────
 
 export const backups = sqliteTable("backups", {

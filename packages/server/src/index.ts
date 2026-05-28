@@ -18,6 +18,7 @@ import { cronRoutes } from "./routes/cron";
 import { vaultRoutes } from "./routes/vault";
 import { systemRoutes } from "./routes/system";
 import { chatRoutes } from "./routes/chat";
+import { spawnRoutes } from "./routes/spawn";
 
 const app = new Hono();
 
@@ -45,6 +46,7 @@ app.route("/api", cronRoutes);
 app.route("/api", vaultRoutes);
 app.route("/api", systemRoutes);
 app.route("/api", chatRoutes);
+app.route("/api", spawnRoutes);
 
 const port = Number(process.env.PORT ?? 3001);
 

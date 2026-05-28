@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn, timeAgo, MOOD_COLORS } from "@/lib/utils";
-import { useSessions, useMessages, useCreateSession, useAgents, useChatProvider } from "@/hooks/useApi";
-import { Send, Plus, ChevronDown, ChevronRight, Cpu, Star, Loader2, Zap } from "lucide-react";
+import { useSessions, useMessages, useCreateSession, useAgents, useChatProvider, useSpawnSubAgent, useCreateDelegation, useDelegations, useAgentSpawns } from "@/hooks/useApi";
+import { Send, Plus, ChevronDown, ChevronRight, Cpu, Star, Loader2, Zap, GitBranch, ArrowRight, Users } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { Message } from "@/lib/api";
@@ -18,7 +18,16 @@ export default function Chat() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [streamingProvider, setStreamingProvider] = useState<string | null>(null);
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const spawnMutation = useSpawnSubAgent();
+  const delegateMutation = useCreateDelegation();
+
+  const activeAgent = sessions?.find(s => s.id === activeSession)?.agent;
+  const activeAgentId = activeAgent?.id ?? 0;
+  const { data: spawns } = useAgentSpawns(activeAgentId);
+  const { data: delegationsList } = useDelegations(activeAgentId);
+  const msgCount = messages?.length ?? 0;
 
   useEffect(() => {
     if (sessions?.length && !activeSession) setActiveSession(sessions[0].id);
@@ -28,13 +37,70 @@ export default function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streamingContent]);
 
-  const activeAgent = sessions?.find(s => s.id === activeSession)?.agent;
-  const msgCount = messages?.length ?? 0;
+  const handleSlashCommand = useCallback(async (content: string): Promise<boolean> => {
+    if (!activeAgent) return false;
+    const parts = content.split(" ");
+    const cmd = parts[0]?.toLowerCase();
+
+    if (cmd === "/spawn") {
+      const purpose = parts.slice(1).join(" ") || "General sub-task";
+      try {
+        await spawnMutation.mutateAsync({ agentId: activeAgent.id, purpose, sessionId: activeSession || undefined });
+      } catch (err) {
+        setStreamingContent(`Error: ${err instanceof Error ? err.message : "Spawn failed"}`);
+        setTimeout(() => { setStreamingContent(""); refetchMessages(); }, 3000);
+      }
+      refetchMessages();
+      return true;
+    }
+
+    if (cmd === "/delegate") {
+      const rest = parts.slice(1).join(" ");
+      const match = rest.match(/^@(\w+)\s+(.+)$/);
+      if (!match) {
+        setStreamingContent("Usage: /delegate @AgentName task description");
+        setTimeout(() => setStreamingContent(""), 3000);
+        return true;
+      }
+      const targetName = match[1];
+      const task = match[2];
+      const target = agents?.find(a => a.name.toLowerCase() === targetName.toLowerCase());
+      if (!target) {
+        setStreamingContent(`Agent "${targetName}" not found`);
+        setTimeout(() => setStreamingContent(""), 3000);
+        return true;
+      }
+      try {
+        await delegateMutation.mutateAsync({ fromAgentId: activeAgent.id, toAgentId: target.id, taskDescription: task, sessionId: activeSession || undefined, autoExecute: true });
+      } catch (err) {
+        setStreamingContent(`Error: ${err instanceof Error ? err.message : "Delegation failed"}`);
+        setTimeout(() => { setStreamingContent(""); refetchMessages(); }, 3000);
+      }
+      refetchMessages();
+      return true;
+    }
+
+    if (cmd === "/help") {
+      setStreamingContent(`Available commands:\n/spawn <purpose> — Create a sub-agent for a task\n/delegate @AgentName <task> — Delegate task to another agent\n/help — Show this help`);
+      setTimeout(() => setStreamingContent(""), 5000);
+      return true;
+    }
+
+    return false;
+  }, [activeAgent, activeSession, agents, spawnMutation, delegateMutation, refetchMessages]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || !activeSession || isStreaming) return;
     const content = input.trim();
     setInput("");
+    setShowSlashMenu(false);
+
+    // Handle slash commands
+    if (content.startsWith("/")) {
+      const handled = await handleSlashCommand(content);
+      if (handled) return;
+    }
+
     setIsStreaming(true);
     setStreamingContent("");
     setStreamingProvider(null);
@@ -68,7 +134,7 @@ export default function Chat() {
       setStreamingContent("");
       refetchMessages();
     }
-  }, [input, activeSession, isStreaming, refetchMessages, qc]);
+  }, [input, activeSession, isStreaming, refetchMessages, qc, handleSlashCommand]);
 
   const handleNewSession = () => {
     if (!agents?.length) return;
@@ -155,11 +221,11 @@ export default function Chat() {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 bg-white">
+        <div className="px-6 py-4 border-t border-gray-100 bg-white relative">
           <div className="flex items-end gap-3">
             <textarea
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => { setInput(e.target.value); setShowSlashMenu(e.target.value.startsWith("/")); }}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
               placeholder={`Message ${activeAgent?.name ?? "agent"}… (Enter to send)`}
               className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50 min-h-[44px] max-h-[120px]"
@@ -170,12 +236,27 @@ export default function Chat() {
               {isStreaming ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             </button>
           </div>
+          {showSlashMenu && input.startsWith("/") && (
+            <div className="absolute bottom-full mb-1 left-0 bg-white border border-gray-200 rounded-xl shadow-lg p-1 w-72 z-10">
+              {[
+                { cmd: "/spawn", desc: "Create a sub-agent for a task", icon: GitBranch },
+                { cmd: "/delegate", desc: "Delegate task to another agent", icon: ArrowRight },
+                { cmd: "/help", desc: "Show all available commands", icon: Users },
+              ].filter(c => c.cmd.startsWith(input.toLowerCase())).map(c => (
+                <button key={c.cmd} onClick={() => { setInput(c.cmd + " "); setShowSlashMenu(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-indigo-50 text-left transition-colors">
+                  <c.icon size={14} className="text-indigo-500" />
+                  <div><p className="text-xs font-semibold text-gray-700">{c.cmd}</p><p className="text-[10px] text-gray-400">{c.desc}</p></div>
+                </button>
+              ))}
+            </div>
+          )}
           <p className="text-[10px] text-gray-400 mt-1.5">
             {chatProvider?.configured
               ? <span className="text-emerald-500">Connected to {chatProvider.name ?? chatProvider.provider}</span>
               : <span className="text-amber-400">Mock mode — configure a provider in Settings for real AI</span>
             }
-            {" · "}Use /help for commands · Shift+Enter for new line
+            {" · "}/spawn · /delegate · /help · Shift+Enter for new line
           </p>
         </div>
       </div>
@@ -215,6 +296,40 @@ export default function Chat() {
             </div>
           </div>
 
+          {/* Sub-agents section */}
+          {(spawns ?? []).filter(s => s.status === "active").length > 0 && (
+            <div className="mb-4">
+              <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">ACTIVE SUB-AGENTS</p>
+              {(spawns ?? []).filter(s => s.status === "active").map(s => (
+                <div key={s.id} className="bg-emerald-50 rounded-lg p-2.5 mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <GitBranch size={10} className="text-emerald-600" />
+                    <p className="text-[11px] font-semibold text-emerald-700">{s.childAgent?.name ?? "Sub-agent"}</p>
+                  </div>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">{s.purpose}</p>
+                  <p className="text-[9px] text-emerald-400">Mode: {s.mode} · Depth: {s.depth}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Delegations section */}
+          {(delegationsList ?? []).filter(d => d.status !== "completed").length > 0 && (
+            <div className="mb-4">
+              <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">ACTIVE DELEGATIONS</p>
+              {(delegationsList ?? []).filter(d => d.status !== "completed").slice(0, 5).map(d => (
+                <div key={d.id} className="bg-amber-50 rounded-lg p-2.5 mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <ArrowRight size={10} className="text-amber-600" />
+                    <p className="text-[11px] font-semibold text-amber-700">{d.fromAgent?.emoji} → {d.toAgent?.emoji} {d.toAgent?.name}</p>
+                  </div>
+                  <p className="text-[10px] text-amber-600 mt-0.5">{d.taskDescription?.slice(0, 60)}</p>
+                  <p className="text-[9px] text-amber-400">{d.status} · {d.priority}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="mb-4">
             <p className="text-[9px] font-bold tracking-wider text-gray-400 mb-2">PROVIDER</p>
             <div className="bg-gray-50 rounded-lg p-2.5">
@@ -247,6 +362,26 @@ function MessageBubble({ msg, agentEmoji }: { msg: Message; agentEmoji: string }
     return (
       <div className="flex justify-end">
         <div className="max-w-[65%] bg-indigo-600 text-white rounded-2xl rounded-br-md px-4 py-3 text-sm">{msg.content}</div>
+      </div>
+    );
+  }
+
+  // System messages (delegation notifications, spawn events)
+  if (msg.role === "system") {
+    const isDelegation = msg.content.includes("📨") || msg.content.includes("📬");
+    const isSpawn = msg.content.includes("spawned");
+    return (
+      <div className="flex justify-center">
+        <div className={cn("max-w-[80%] rounded-xl px-4 py-2.5 text-xs whitespace-pre-wrap",
+          isDelegation ? "bg-amber-50 border border-amber-100 text-amber-700" :
+          isSpawn ? "bg-emerald-50 border border-emerald-100 text-emerald-700" :
+          "bg-gray-50 border border-gray-100 text-gray-500")}>
+          <div className="flex items-center gap-1.5 mb-1">
+            {isDelegation ? <ArrowRight size={12} /> : isSpawn ? <GitBranch size={12} /> : <Cpu size={12} />}
+            <span className="font-semibold">{isDelegation ? "Delegation" : isSpawn ? "Sub-Agent" : "System"}</span>
+          </div>
+          {msg.content}
+        </div>
       </div>
     );
   }

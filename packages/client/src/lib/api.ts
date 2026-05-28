@@ -329,4 +329,24 @@ export const api = {
       }
     }
   },
+
+  // Sub-Agent Spawns
+  getAgentSpawns: (agentId: number) => request<any[]>(`/agents/${agentId}/spawns`),
+  spawnSubAgent: (agentId: number, data: { purpose: string; mode?: string; name?: string; emoji?: string; sessionId?: number }) =>
+    request<any>(`/agents/${agentId}/spawn`, { method: "POST", body: JSON.stringify(data) }),
+  terminateSpawn: (spawnId: number) => request<any>(`/spawns/${spawnId}/terminate`, { method: "POST" }),
+  completeSpawn: (spawnId: number, result: string) => request<any>(`/spawns/${spawnId}/complete`, { method: "POST", body: JSON.stringify({ result }) }),
+
+  // Delegations
+  listDelegations: (agentId?: number) => request<any[]>(`/delegations${agentId ? `?agentId=${agentId}` : ""}`),
+  createDelegation: (data: { fromAgentId: number; toAgentId: number; taskDescription: string; context?: string; priority?: string; sessionId?: number; autoExecute?: boolean }) =>
+    request<any>("/delegations", { method: "POST", body: JSON.stringify(data) }),
+  executeDelegation: (id: number) => request<any>(`/delegations/${id}/execute`, { method: "POST" }),
+
+  // Agent Links
+  listAgentLinks: (agentId?: number) => request<any[]>(`/agent-links${agentId ? `?agentId=${agentId}` : ""}`),
+
+  // Find best agent
+  findBestAgent: (taskDescription: string, excludeAgentId?: number) =>
+    request<any>("/agents/find-best", { method: "POST", body: JSON.stringify({ taskDescription, excludeAgentId }) }),
 };
