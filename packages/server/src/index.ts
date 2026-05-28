@@ -10,6 +10,13 @@ import { memoryRoutes } from "./routes/memory";
 import { dashboardRoutes } from "./routes/dashboard";
 import { providersRoutes } from "./routes/providers";
 import { settingsRoutes } from "./routes/settings";
+import { channelsRoutes } from "./routes/channels";
+import { toolsRoutes } from "./routes/tools";
+import { mcpRoutes } from "./routes/mcp";
+import { hooksRoutes } from "./routes/hooks";
+import { cronRoutes } from "./routes/cron";
+import { vaultRoutes } from "./routes/vault";
+import { systemRoutes } from "./routes/system";
 
 const app = new Hono();
 
@@ -29,6 +36,13 @@ app.route("/api", memoryRoutes);
 app.route("/api", dashboardRoutes);
 app.route("/api", providersRoutes);
 app.route("/api", settingsRoutes);
+app.route("/api", channelsRoutes);
+app.route("/api", toolsRoutes);
+app.route("/api", mcpRoutes);
+app.route("/api", hooksRoutes);
+app.route("/api", cronRoutes);
+app.route("/api", vaultRoutes);
+app.route("/api", systemRoutes);
 
 const port = Number(process.env.PORT ?? 3001);
 

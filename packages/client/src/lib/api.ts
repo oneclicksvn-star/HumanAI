@@ -228,4 +228,55 @@ export const api = {
 
   // Health
   health: () => request<{ status: string }>("/health"),
+
+  // Channels
+  listChannels: () => request<any[]>("/channels"),
+  createChannel: (data: any) => request<any>("/channels", { method: "POST", body: JSON.stringify(data) }),
+  updateChannel: (id: number, data: any) => request<any>(`/channels/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteChannel: (id: number) => request<void>(`/channels/${id}`, { method: "DELETE" }),
+
+  // Tools
+  listTools: () => request<any[]>("/tools"),
+  createTool: (data: any) => request<any>("/tools", { method: "POST", body: JSON.stringify(data) }),
+  updateTool: (id: number, data: any) => request<any>(`/tools/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteTool: (id: number) => request<void>(`/tools/${id}`, { method: "DELETE" }),
+
+  // MCP Servers
+  listMcpServers: () => request<any[]>("/mcp-servers"),
+  createMcpServer: (data: any) => request<any>("/mcp-servers", { method: "POST", body: JSON.stringify(data) }),
+  updateMcpServer: (id: number, data: any) => request<any>(`/mcp-servers/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteMcpServer: (id: number) => request<void>(`/mcp-servers/${id}`, { method: "DELETE" }),
+
+  // Hooks
+  listHooks: () => request<any[]>("/hooks"),
+  createHook: (data: any) => request<any>("/hooks", { method: "POST", body: JSON.stringify(data) }),
+  updateHook: (id: number, data: any) => request<any>(`/hooks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteHook: (id: number) => request<void>(`/hooks/${id}`, { method: "DELETE" }),
+
+  // Cron Jobs
+  listCronJobs: () => request<any[]>("/cron-jobs"),
+  createCronJob: (data: any) => request<any>("/cron-jobs", { method: "POST", body: JSON.stringify(data) }),
+  updateCronJob: (id: number, data: any) => request<any>(`/cron-jobs/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteCronJob: (id: number) => request<void>(`/cron-jobs/${id}`, { method: "DELETE" }),
+
+  // Vault
+  listVaultDocs: () => request<any[]>("/vault"),
+  getVaultDoc: (id: number) => request<any>(`/vault/${id}`),
+  createVaultDoc: (data: any) => request<any>("/vault", { method: "POST", body: JSON.stringify(data) }),
+  updateVaultDoc: (id: number, data: any) => request<any>(`/vault/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteVaultDoc: (id: number) => request<void>(`/vault/${id}`, { method: "DELETE" }),
+
+  // System
+  listApiKeys: () => request<any[]>("/api-keys"),
+  createApiKey: (data: any) => request<any>("/api-keys", { method: "POST", body: JSON.stringify(data) }),
+  deleteApiKey: (id: number) => request<void>(`/api-keys/${id}`, { method: "DELETE" }),
+  getUsage: () => request<any[]>("/usage"),
+  getUsageSummary: () => request<any>("/usage/summary"),
+  getTraces: () => request<any[]>("/traces"),
+  getLogs: (level?: string) => request<any[]>(`/logs${level ? `?level=${level}` : ""}`),
+  getActivity: () => request<any[]>("/activity"),
+  getBackups: () => request<any[]>("/backups"),
+  createBackup: (data: any) => request<any>("/backups", { method: "POST", body: JSON.stringify(data) }),
+  getDoctor: () => request<any>("/doctor"),
+  getHeartbeat: () => request<any>("/heartbeat"),
 };
