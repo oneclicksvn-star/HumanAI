@@ -174,17 +174,7 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
             <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><BookOpen size={14} /> Nhân vật & Identity</h3>
             {editing && <div className="flex gap-1"><button onClick={onSave} className="p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"><Check size={12} /></button><button onClick={onCancel} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200"><X size={12} /></button></div>}
           </div>
-          {/* Avatar with mood indicator */}
-          <div className="flex flex-col items-center mb-3">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl bg-gradient-to-br from-gray-50 to-gray-100 border-2" style={{ borderColor: MOOD_COLORS[agent.mood] ?? "#6366f1" }}>
-                {agent.emoji || "🤖"}
-              </div>
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-semibold text-white whitespace-nowrap" style={{ background: MOOD_COLORS[agent.mood] ?? "#6366f1" }}>
-                {agent.mood ?? "neutral"}
-              </div>
-            </div>
-          </div>
+
 
           {editing ? (
             <div className="space-y-3">
