@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
 import Agents from "@/pages/agents";
+import AgentDetail from "@/pages/agent-detail";
 import Teams from "@/pages/teams";
 import Sessions from "@/pages/sessions";
 import Memory from "@/pages/memory";
@@ -37,7 +38,7 @@ export default function App() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chat" component={Chat} />
           <Route path="/agents" component={Agents} />
-          <Route path="/agents/:id" component={Agents} />
+          <Route path="/agents/:id" component={AgentDetail} />
           <Route path="/teams" component={Teams} />
           <Route path="/company" component={Company} />
           <Route path="/sessions" component={Sessions} />

@@ -19,7 +19,10 @@ export interface Agent {
   nature: string | null;
   purpose: string | null;
   vibe: string | null;
-  status: "active" | "sleeping" | "archived";
+  description: string | null;
+  agentType: string;
+  isDefault: boolean;
+  status: "active" | "sleeping" | "archived" | "summoning";
   mood: string;
   moodLabel: string;
   level: number;
@@ -30,9 +33,78 @@ export interface Agent {
   model: string | null;
   providerId: string | null;
   temperature: number | null;
+  maxTokens: number | null;
+  contextWindow: number;
+  maxToolIterations: number;
+  systemPrompt: string | null;
+  thinkingLevel: string;
+  selfEvolve: boolean;
+  skillEvolve: boolean;
+  toolsConfig: { allowList?: string[] | null; denyList?: string[] | null; requireApproval?: string[] | null; toolCallPrefix?: string } | null;
+  subagentsConfig: { maxConcurrent?: number; maxSpawnDepth?: number; maxChildrenPerAgent?: number; archiveAfterMinutes?: number; model?: string } | null;
+  memoryConfig: { autoExtract?: boolean; maxMemories?: number; consolidationInterval?: string; importanceThreshold?: number } | null;
+  sandboxConfig: { enabled?: boolean; timeoutMs?: number; maxOutputBytes?: number; allowNetwork?: boolean } | null;
+  workspace: string | null;
+  restrictToWorkspace: boolean;
+  budgetMonthlyCents: number | null;
   skills: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AgentProfile {
+  agent: Agent;
+  personality: Personality;
+  contextFiles: Array<{ id: number; fileName: string; isSystem: boolean; updatedAt: string }>;
+  commitments: AgentCommitment[];
+  skills: AgentSkill[];
+  stats: { memoriesCount: number; sessionsCount: number; activeSubAgents: number; totalSpawns: number; delegationsGiven: number; delegationsReceived: number; outboundLinks: number; inboundLinks: number };
+}
+
+export interface AgentContextFile {
+  id: number;
+  agentId: number;
+  fileName: string;
+  content: string;
+  isSystem: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface AgentCommitment {
+  id: number;
+  agentId: number;
+  type: string;
+  title: string;
+  description: string | null;
+  status: string;
+  dueAt: string | null;
+  targetUserId: string | null;
+  metadata: Record<string, unknown> | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface AgentMoodEntry {
+  id: number;
+  agentId: number;
+  mood: string;
+  moodLabel: string;
+  energy: number;
+  trigger: string | null;
+  sessionId: number | null;
+  createdAt: string;
+}
+
+export interface AgentConfig {
+  agentId: number;
+  llm: { model: string | null; providerId: string | null; temperature: number | null; maxTokens: number | null; contextWindow: number; maxToolIterations: number; thinkingLevel: string };
+  tools: { allowList?: string[] | null; denyList?: string[] | null; requireApproval?: string[] | null; toolCallPrefix?: string };
+  subagents: { maxConcurrent: number; maxSpawnDepth: number; maxChildrenPerAgent: number; archiveAfterMinutes: number; model: string };
+  memory: { autoExtract: boolean; maxMemories: number; consolidationInterval: string; importanceThreshold: number };
+  sandbox: { enabled: boolean; timeoutMs: number; maxOutputBytes: number; allowNetwork: boolean };
+  behavior: { selfEvolve: boolean; skillEvolve: boolean; systemPrompt: string | null };
+  budget: { monthlyCents: number | null };
 }
 
 export interface Personality {
@@ -169,11 +241,26 @@ export const api = {
   // Agents
   listAgents: () => request<Agent[]>("/agents"),
   getAgent: (id: number) => request<Agent>(`/agents/${id}`),
-  createAgent: (data: Partial<Agent>) => request<Agent>("/agents", { method: "POST", body: JSON.stringify(data) }),
+  getAgentProfile: (id: number) => request<AgentProfile>(`/agents/${id}/profile`),
+  getAgentConfig: (id: number) => request<AgentConfig>(`/agents/${id}/config`),
+  updateAgentConfig: (id: number, data: Record<string, unknown>) => request<Agent>(`/agents/${id}/config`, { method: "PATCH", body: JSON.stringify(data) }),
+  createAgent: (data: Record<string, unknown>) => request<Agent>("/agents", { method: "POST", body: JSON.stringify(data) }),
   updateAgent: (id: number, data: Partial<Agent>) => request<Agent>(`/agents/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   deleteAgent: (id: number) => request<void>(`/agents/${id}`, { method: "DELETE" }),
   getPersonality: (id: number) => request<Personality>(`/agents/${id}/personality`),
   updatePersonality: (id: number, data: Partial<Personality>) => request<Personality>(`/agents/${id}/personality`, { method: "PATCH", body: JSON.stringify(data) }),
+  // Agent context files
+  listContextFiles: (agentId: number) => request<AgentContextFile[]>(`/agents/${agentId}/context-files`),
+  getContextFile: (agentId: number, fileName: string) => request<AgentContextFile>(`/agents/${agentId}/context-files/${fileName}`),
+  updateContextFile: (agentId: number, fileName: string, content: string) => request<AgentContextFile>(`/agents/${agentId}/context-files/${fileName}`, { method: "PUT", body: JSON.stringify({ content }) }),
+  // Agent commitments
+  listCommitments: (agentId: number) => request<AgentCommitment[]>(`/agents/${agentId}/commitments`),
+  createCommitment: (agentId: number, data: Record<string, unknown>) => request<AgentCommitment>(`/agents/${agentId}/commitments`, { method: "POST", body: JSON.stringify(data) }),
+  updateCommitment: (agentId: number, commitmentId: number, data: Record<string, unknown>) => request<AgentCommitment>(`/agents/${agentId}/commitments/${commitmentId}`, { method: "PATCH", body: JSON.stringify(data) }),
+  // Agent mood history
+  listMoodHistory: (agentId: number) => request<AgentMoodEntry[]>(`/agents/${agentId}/mood-history`),
+  // Agent XP
+  awardXp: (agentId: number, xp: number, reason: string) => request<{ agentId: number; xpGained: number; xp: number; level: number; xpNext: number; lifecycle: string; leveledUp: boolean }>(`/agents/${agentId}/xp`, { method: "POST", body: JSON.stringify({ xp, reason }) }),
 
   // Sessions
   listSessions: () => request<Session[]>("/sessions"),

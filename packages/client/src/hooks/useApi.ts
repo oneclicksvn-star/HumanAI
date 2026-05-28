@@ -4,7 +4,12 @@ import { api } from "@/lib/api";
 // Agents
 export const useAgents = () => useQuery({ queryKey: ["agents"], queryFn: api.listAgents });
 export const useAgent = (id: number) => useQuery({ queryKey: ["agents", id], queryFn: () => api.getAgent(id), enabled: id > 0 });
+export const useAgentProfile = (id: number) => useQuery({ queryKey: ["agent-profile", id], queryFn: () => api.getAgentProfile(id), enabled: id > 0 });
+export const useAgentConfig = (id: number) => useQuery({ queryKey: ["agent-config", id], queryFn: () => api.getAgentConfig(id), enabled: id > 0 });
 export const usePersonality = (id: number) => useQuery({ queryKey: ["personality", id], queryFn: () => api.getPersonality(id), enabled: id > 0 });
+export const useContextFiles = (agentId: number) => useQuery({ queryKey: ["context-files", agentId], queryFn: () => api.listContextFiles(agentId), enabled: agentId > 0 });
+export const useCommitments = (agentId: number) => useQuery({ queryKey: ["commitments", agentId], queryFn: () => api.listCommitments(agentId), enabled: agentId > 0 });
+export const useMoodHistory = (agentId: number) => useQuery({ queryKey: ["mood-history", agentId], queryFn: () => api.listMoodHistory(agentId), enabled: agentId > 0 });
 
 export const useCreateAgent = () => {
   const qc = useQueryClient();
