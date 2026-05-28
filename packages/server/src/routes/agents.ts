@@ -365,6 +365,106 @@ agentsRoutes.patch("/agents/:id/config", async (c) => {
   return c.json(agent);
 });
 
+// ─── Agent Skills Management ─────────────────────────────────────────────────
+
+// GET /agents/:id/skills — get all skills for this agent
+agentsRoutes.get("/agents/:id/skills", async (c) => {
+  const id = Number(c.req.param("id"));
+  const skills = await db.select().from(agentSkills).where(eq(agentSkills.agentId, id));
+  return c.json(skills);
+});
+
+// POST /agents/:id/skills — add a new skill to this agent
+agentsRoutes.post("/agents/:id/skills", async (c) => {
+  const id = Number(c.req.param("id"));
+  const body = await c.req.json();
+  const { name, category, description, pinned } = body;
+  if (!name) return c.json({ error: "Name is required" }, 400);
+  const slug = body.slug ?? name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const [skill] = await db.insert(agentSkills).values({
+    agentId: id,
+    name,
+    slug,
+    description: description ?? null,
+    category: category ?? "general",
+    pinned: pinned ?? false,
+    granted: true,
+    mastery: body.mastery ?? 0,
+    practiceCount: 0,
+  }).returning();
+  return c.json(skill, 201);
+});
+
+// PATCH /agents/:id/skills/:skillId — update a skill (pin/unpin, mastery, etc.)
+agentsRoutes.patch("/agents/:id/skills/:skillId", async (c) => {
+  const skillId = Number(c.req.param("skillId"));
+  const body = await c.req.json();
+  const updates: Record<string, unknown> = {};
+  if (body.pinned !== undefined) updates.pinned = body.pinned;
+  if (body.mastery !== undefined) updates.mastery = body.mastery;
+  if (body.granted !== undefined) updates.granted = body.granted;
+  if (body.name !== undefined) updates.name = body.name;
+  if (body.category !== undefined) updates.category = body.category;
+  if (body.description !== undefined) updates.description = body.description;
+  const [skill] = await db.update(agentSkills).set(updates).where(eq(agentSkills.id, skillId)).returning();
+  if (!skill) return c.json({ error: "Skill not found" }, 404);
+  return c.json(skill);
+});
+
+// DELETE /agents/:id/skills/:skillId — remove a skill
+agentsRoutes.delete("/agents/:id/skills/:skillId", async (c) => {
+  const skillId = Number(c.req.param("skillId"));
+  await db.delete(agentSkills).where(eq(agentSkills.id, skillId));
+  return c.json({ ok: true });
+});
+
+// POST /agents/:id/skills/:skillId/pin — pin a skill
+agentsRoutes.post("/agents/:id/skills/:skillId/pin", async (c) => {
+  const id = Number(c.req.param("id"));
+  const skillId = Number(c.req.param("skillId"));
+  // Check pinned count (max 10)
+  const pinned = await db.select().from(agentSkills).where(and(eq(agentSkills.agentId, id), eq(agentSkills.pinned, true)));
+  if (pinned.length >= 10) return c.json({ error: "Maximum 10 pinned skills" }, 400);
+  const [skill] = await db.update(agentSkills).set({ pinned: true }).where(eq(agentSkills.id, skillId)).returning();
+  if (!skill) return c.json({ error: "Skill not found" }, 404);
+  return c.json(skill);
+});
+
+// POST /agents/:id/skills/:skillId/unpin — unpin a skill
+agentsRoutes.post("/agents/:id/skills/:skillId/unpin", async (c) => {
+  const skillId = Number(c.req.param("skillId"));
+  const [skill] = await db.update(agentSkills).set({ pinned: false }).where(eq(agentSkills.id, skillId)).returning();
+  if (!skill) return c.json({ error: "Skill not found" }, 404);
+  return c.json(skill);
+});
+
+// GET /skills/catalog — global skill catalog (available to browse/add)
+agentsRoutes.get("/skills/catalog", async (c) => {
+  const SKILL_CATALOG = [
+    { slug: "data-analysis", name: "Data Analysis", category: "analytics", description: "Phân tích dữ liệu, patterns, insights" },
+    { slug: "code-review", name: "Code Review", category: "development", description: "Review code, suggest improvements" },
+    { slug: "web-search", name: "Web Search", category: "research", description: "Tìm kiếm thông tin trên internet" },
+    { slug: "creative-writing", name: "Creative Writing", category: "creative", description: "Viết sáng tạo, storytelling" },
+    { slug: "translation", name: "Translation", category: "language", description: "Dịch thuật đa ngôn ngữ" },
+    { slug: "summarization", name: "Summarization", category: "language", description: "Tóm tắt văn bản dài" },
+    { slug: "task-planning", name: "Task Planning", category: "strategy", description: "Lập kế hoạch, chia nhỏ task" },
+    { slug: "debugging", name: "Debugging", category: "development", description: "Tìm và sửa lỗi code" },
+    { slug: "api-integration", name: "API Integration", category: "development", description: "Kết nối và sử dụng API bên ngoài" },
+    { slug: "image-analysis", name: "Image Analysis", category: "vision", description: "Phân tích hình ảnh, OCR" },
+    { slug: "math-reasoning", name: "Math & Reasoning", category: "analytics", description: "Giải toán, logic reasoning" },
+    { slug: "file-management", name: "File Management", category: "tools", description: "Quản lý tệp, đọc/ghi/tìm kiếm" },
+    { slug: "shell-commands", name: "Shell Commands", category: "tools", description: "Thực thi lệnh terminal" },
+    { slug: "conversation", name: "Conversation", category: "social", description: "Trò chuyện tự nhiên, empathy" },
+    { slug: "teaching", name: "Teaching", category: "education", description: "Giải thích, hướng dẫn, mentoring" },
+    { slug: "ethical-reasoning", name: "Ethical Reasoning", category: "ethics", description: "Đánh giá đạo đức, công bằng" },
+    { slug: "team-coordination", name: "Team Coordination", category: "leadership", description: "Phối hợp nhóm, delegation" },
+    { slug: "memory-recall", name: "Memory Recall", category: "memory", description: "Nhớ lại thông tin quan trọng" },
+    { slug: "scheduling", name: "Scheduling", category: "tools", description: "Lên lịch, nhắc nhở, cron" },
+    { slug: "security-audit", name: "Security Audit", category: "security", description: "Kiểm tra bảo mật, vulnerabilities" },
+  ];
+  return c.json(SKILL_CATALOG);
+});
+
 // ─── Agent Lifecycle & XP ────────────────────────────────────────────────────
 
 agentsRoutes.post("/agents/:id/xp", async (c) => {

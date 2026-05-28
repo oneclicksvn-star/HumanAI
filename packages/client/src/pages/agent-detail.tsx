@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useAgentProfile, useAgentConfig, useProviders, useContextFiles, useCommitments, useMoodHistory } from "@/hooks/useApi";
-import { api, AgentContextFile } from "@/lib/api";
+import { api, request, AgentContextFile } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn, MOOD_COLORS } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, MessageCircle, Settings2, Brain, FileText, Heart, Clock, Zap, Shield, Star,
-  Save, X, ChevronRight, Pencil, Check, AlertCircle, BookOpen, Target, Sparkles, BarChart3
+  Save, X, ChevronRight, Pencil, Check, AlertCircle, BookOpen, Target, Sparkles, BarChart3,
+  Pin, PinOff, Plus, Trash2, Search
 } from "lucide-react";
 
 const STAGE_COLORS: Record<string, string> = { infant: "#60a5fa", child: "#34d399", teen: "#f59e0b", adult: "#f97316", expert: "#ef4444", mentor: "#8b5cf6" };
@@ -208,22 +209,8 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
           </div>
         </div>
 
-        {/* Skills */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3"><BarChart3 size={14} /> Skills</h3>
-          <div className="space-y-2">
-            {(profile.skills ?? []).map((s: any) => (
-              <div key={s.id} className="flex items-center gap-3">
-                <span className="text-xs text-gray-600 w-28 truncate">{s.name}</span>
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${s.mastery}%` }} />
-                </div>
-                <span className="text-[10px] text-gray-400 w-8">{s.mastery}%</span>
-              </div>
-            ))}
-            {(profile.skills ?? []).length === 0 && <p className="text-xs text-gray-400">No skills recorded yet</p>}
-          </div>
-        </div>
+        {/* Skills with Pin/Browse */}
+        <SkillsSection agentId={agent.id} skills={profile.skills ?? []} />
       </div>
 
       {/* ─── RIGHT COLUMN: Thông số (Parameters/Config) ─── */}
@@ -719,6 +706,155 @@ function ToggleField({ label, value, onChange }: { label: string; value: boolean
       <button onClick={() => onChange(!value)} className={cn("w-10 h-5 rounded-full transition-colors relative", value ? "bg-indigo-600" : "bg-gray-200")}>
         <div className={cn("w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm", value ? "translate-x-5" : "translate-x-0.5")} />
       </button>
+    </div>
+  );
+}
+
+// ─── Skills Section with Browse/Pin ──────────────────────────────────────────
+
+const MAX_PINNED = 10;
+const CATEGORY_COLORS: Record<string, string> = {
+  analytics: "bg-blue-50 text-blue-600", development: "bg-emerald-50 text-emerald-600",
+  research: "bg-purple-50 text-purple-600", creative: "bg-pink-50 text-pink-600",
+  language: "bg-amber-50 text-amber-600", strategy: "bg-orange-50 text-orange-600",
+  tools: "bg-gray-50 text-gray-600", social: "bg-cyan-50 text-cyan-600",
+  education: "bg-teal-50 text-teal-600", ethics: "bg-indigo-50 text-indigo-600",
+  leadership: "bg-violet-50 text-violet-600", security: "bg-red-50 text-red-600",
+  memory: "bg-lime-50 text-lime-600", vision: "bg-sky-50 text-sky-600",
+  general: "bg-gray-50 text-gray-500",
+};
+
+function SkillsSection({ agentId, skills: initialSkills }: { agentId: number; skills: any[] }) {
+  const [skills, setSkills] = useState(initialSkills);
+  const [showBrowse, setShowBrowse] = useState(false);
+  const [catalog, setCatalog] = useState<any[]>([]);
+  const [catSearch, setCatSearch] = useState("");
+  const qc = useQueryClient();
+
+  useEffect(() => { setSkills(initialSkills); }, [initialSkills]);
+
+  const pinnedSkills = skills.filter(s => s.pinned);
+  const unpinnedSkills = skills.filter(s => !s.pinned);
+
+  const handlePin = async (skillId: number) => {
+    if (pinnedSkills.length >= MAX_PINNED) return;
+    await request(`/agents/${agentId}/skills/${skillId}/pin`, { method: "POST" });
+    setSkills(skills.map(s => s.id === skillId ? { ...s, pinned: true } : s));
+    qc.invalidateQueries({ queryKey: ["agent-profile", agentId] });
+  };
+
+  const handleUnpin = async (skillId: number) => {
+    await request(`/agents/${agentId}/skills/${skillId}/unpin`, { method: "POST" });
+    setSkills(skills.map(s => s.id === skillId ? { ...s, pinned: false } : s));
+    qc.invalidateQueries({ queryKey: ["agent-profile", agentId] });
+  };
+
+  const handleRemove = async (skillId: number) => {
+    await request(`/agents/${agentId}/skills/${skillId}`, { method: "DELETE" });
+    setSkills(skills.filter(s => s.id !== skillId));
+    qc.invalidateQueries({ queryKey: ["agent-profile", agentId] });
+  };
+
+  const handleAddFromCatalog = async (item: any) => {
+    const existing = skills.find(s => s.slug === item.slug || s.name === item.name);
+    if (existing) return;
+    const res = await request(`/agents/${agentId}/skills`, {
+      method: "POST",
+      body: JSON.stringify({ name: item.name, slug: item.slug, category: item.category, description: item.description }),
+    });
+    if (res) {
+      setSkills([...skills, res]);
+      qc.invalidateQueries({ queryKey: ["agent-profile", agentId] });
+    }
+  };
+
+  const loadCatalog = async () => {
+    if (catalog.length === 0) {
+      const data = await request<any[]>("/skills/catalog");
+      setCatalog(data ?? []);
+    }
+    setShowBrowse(!showBrowse);
+  };
+
+  const filteredCatalog = catalog.filter(c =>
+    !skills.find(s => s.slug === c.slug || s.name === c.name) &&
+    (catSearch === "" || c.name.toLowerCase().includes(catSearch.toLowerCase()) || c.category.includes(catSearch.toLowerCase()))
+  );
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><BarChart3 size={14} /> Skills</h3>
+        <button onClick={loadCatalog} className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+          <Plus size={12} /> Browse
+        </button>
+      </div>
+
+      {/* Pinned Skills */}
+      {pinnedSkills.length > 0 && (
+        <div className="mb-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Pin size={11} className="text-orange-500" />
+            <span className="text-[10px] font-medium text-gray-500 uppercase">Pinned ({pinnedSkills.length}/{MAX_PINNED})</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {pinnedSkills.map(s => (
+              <span key={s.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-50 text-orange-700 text-[11px] font-medium group cursor-pointer hover:bg-orange-100" onClick={() => handleUnpin(s.id)}>
+                <Pin size={10} /> {s.name}
+                <PinOff size={10} className="opacity-0 group-hover:opacity-100 text-orange-400" />
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* All Skills (with mastery bars) */}
+      <div className="space-y-2">
+        {skills.map((s: any) => (
+          <div key={s.id} className="flex items-center gap-2 group">
+            <button onClick={() => s.pinned ? handleUnpin(s.id) : handlePin(s.id)} className="p-0.5 rounded hover:bg-gray-100" title={s.pinned ? "Unpin" : "Pin"}>
+              <Pin size={11} className={s.pinned ? "text-orange-500" : "text-gray-300"} />
+            </button>
+            <span className="text-xs text-gray-600 w-28 truncate">{s.name}</span>
+            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${s.mastery}%` }} />
+            </div>
+            <span className="text-[10px] text-gray-400 w-8">{s.mastery}%</span>
+            <span className={cn("text-[9px] px-1.5 py-0.5 rounded", CATEGORY_COLORS[s.category] ?? CATEGORY_COLORS.general)}>{s.category}</span>
+            <button onClick={() => handleRemove(s.id)} className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 text-red-400">
+              <Trash2 size={11} />
+            </button>
+          </div>
+        ))}
+        {skills.length === 0 && <p className="text-xs text-gray-400">No skills yet. Click "Browse" to add from catalog.</p>}
+      </div>
+
+      {/* Browse Catalog */}
+      {showBrowse && (
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <Search size={12} className="text-gray-400" />
+            <input value={catSearch} onChange={e => setCatSearch(e.target.value)} placeholder="Search skills..." className="flex-1 text-xs border-none outline-none bg-transparent placeholder-gray-400" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+            {filteredCatalog.map(item => (
+              <button key={item.slug} onClick={() => handleAddFromCatalog(item)} className="text-left p-2 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors">
+                <div className="flex items-center gap-1.5">
+                  <Plus size={10} className="text-indigo-500" />
+                  <span className="text-xs font-medium text-gray-700">{item.name}</span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">{item.description}</p>
+                <span className={cn("text-[9px] px-1.5 py-0.5 rounded mt-1 inline-block", CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS.general)}>{item.category}</span>
+              </button>
+            ))}
+            {filteredCatalog.length === 0 && <p className="col-span-2 text-xs text-gray-400 text-center py-2">All catalog skills already added!</p>}
+          </div>
+        </div>
+      )}
+
+      <p className="text-[10px] text-gray-400 mt-3">
+        Pinned skills are always inlined in the system prompt. Others use skill_search.
+      </p>
     </div>
   );
 }

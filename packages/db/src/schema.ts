@@ -48,6 +48,8 @@ export const agents = sqliteTable("agents", {
   dreamingConfig: text("dreaming_config", { mode: "json" }).$type<AgentDreamingConfig | null>(),
   // Budget
   budgetMonthlyCents: integer("budget_monthly_cents"),
+  // Pinned Skills (always injected into system prompt)
+  pinnedSkills: text("pinned_skills", { mode: "json" }).$type<string[]>().default([]),
   // Legacy
   skills: text("skills", { mode: "json" }).$type<string[]>().default([]),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
@@ -219,9 +221,14 @@ export const agentSkills = sqliteTable("agent_skills", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  slug: text("slug"),
+  description: text("description"),
   mastery: integer("mastery").notNull().default(0),
   practiceCount: integer("practice_count").notNull().default(0),
   category: text("category").notNull().default("general"),
+  pinned: integer("pinned", { mode: "boolean" }).notNull().default(false),
+  granted: integer("granted", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").$defaultFn(() => new Date().toISOString()),
 });
 
 // ─── Dreams ──────────────────────────────────────────────────────────────────
