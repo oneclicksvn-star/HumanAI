@@ -444,7 +444,7 @@ function getTestEndpoint(type: string, baseUrl: string | null): string {
     openai: "https://api.openai.com",
     google: "https://generativelanguage.googleapis.com",
     ollama: "http://localhost:11434",
-    ollama_cloud: "https://api.ollama.com",
+    ollama_cloud: "https://ollama.com",
     deepseek: "https://api.deepseek.com",
     groq: "https://api.groq.com",
     openrouter: "https://openrouter.ai",

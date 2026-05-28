@@ -21,7 +21,7 @@ export type ProviderType =
 const PROVIDER_BASE_URLS: Record<string, string> = {
   openai: "https://api.openai.com/v1",
   ollama: "http://localhost:11434/v1",
-  ollama_cloud: "https://api.ollama.com/v1",
+  ollama_cloud: "https://ollama.com/v1",
   deepseek: "https://api.deepseek.com",
   groq: "https://api.groq.com/openai/v1",
   mistral: "https://api.mistral.ai/v1",
