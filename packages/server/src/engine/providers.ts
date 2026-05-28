@@ -17,7 +17,7 @@ export function createModel(type: ProviderType, apiKey: string, model: string, b
     case "google":
       return createGoogleGenerativeAI({ apiKey })(model);
     case "ollama":
-      return createOpenAI({ apiKey: "ollama", baseURL: baseUrl ?? "http://localhost:11434/v1" })(model);
+      return createOpenAI({ apiKey, baseURL: baseUrl ?? "http://localhost:11434/v1" })(model);
     case "deepseek":
       return createOpenAI({ apiKey, baseURL: baseUrl ?? "https://api.deepseek.com" })(model);
     case "groq":
