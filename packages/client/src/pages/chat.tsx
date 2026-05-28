@@ -50,6 +50,18 @@ export default function Chat() {
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
   const [sessionModel, setSessionModel] = useState<string | null>(null);
   const [sessionProvider, setSessionProvider] = useState<string | null>(null);
+
+  // Load session model/provider override from DB when session changes
+  useEffect(() => {
+    const session = sessions?.find(s => s.id === activeSession);
+    if (session) {
+      setSessionProvider((session as any).overrideProviderId ?? null);
+      setSessionModel((session as any).overrideModel ?? null);
+    } else {
+      setSessionProvider(null);
+      setSessionModel(null);
+    }
+  }, [activeSession, sessions]);
   const [availableModels, setAvailableModels] = useState<{id: string; name: string; contextWindow?: number; reasoning?: boolean; vision?: boolean}[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -408,14 +420,23 @@ export default function Chat() {
             {/* Model/Provider switcher dropdown */}
             {showModelSwitcher && (
               <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-100">
-                <select value={sessionProvider ?? ""} onChange={e => { setSessionProvider(e.target.value || null); setSessionModel(null); }}
+                <select value={sessionProvider ?? ""} onChange={e => {
+                    const val = e.target.value || null;
+                    setSessionProvider(val); setSessionModel(null);
+                    if (activeSession) fetch(`/api/sessions/${activeSession}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ overrideProviderId: val, overrideModel: null }) });
+                  }}
                   className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-300">
                   <option value="">Provider...</option>
                   {(providers ?? []).map((p: any) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
-                <select value={sessionModel ?? ""} onChange={e => { setSessionModel(e.target.value || null); if (e.target.value) setShowModelSwitcher(false); }}
+                <select value={sessionModel ?? ""} onChange={e => {
+                    const val = e.target.value || null;
+                    setSessionModel(val);
+                    if (val) setShowModelSwitcher(false);
+                    if (activeSession) fetch(`/api/sessions/${activeSession}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ overrideModel: val }) });
+                  }}
                   className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-300">
                   <option value="">{availableModels.length ? "Select model..." : sessionProvider ? "Loading..." : "Select provider first"}</option>
                   {availableModels.map(m => (

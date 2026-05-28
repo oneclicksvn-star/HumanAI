@@ -40,8 +40,10 @@ chatRoutes.post("/chat/:sessionId/stream", async (c) => {
     await db.update(sessions).set({ title }).where(eq(sessions.id, sessionId));
   }
 
-  // Get active LLM model (with optional override from client)
-  const activeModel = await getActiveModel(overrideProviderId ?? agent.providerId, overrideModel ?? agent.model);
+  // Get active LLM model: body override > session override > agent config > fallback
+  const effectiveProviderId = overrideProviderId ?? (session as any).overrideProviderId ?? agent.providerId;
+  const effectiveModel = overrideModel ?? (session as any).overrideModel ?? agent.model;
+  const activeModel = await getActiveModel(effectiveProviderId, effectiveModel);
   if (!activeModel) {
     // Fallback: mock response when no provider is configured
     const mockResponse = generateMockResponse(agent.name, agent.mood, userContent);

@@ -127,6 +127,8 @@ export const sessions = sqliteTable("sessions", {
   agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
   title: text("title").notNull().default("New Chat"),
   status: text("status", { enum: ["active", "archived"] }).notNull().default("active"),
+  overrideProviderId: text("override_provider_id"),
+  overrideModel: text("override_model"),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
   updatedAt: text("updated_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
