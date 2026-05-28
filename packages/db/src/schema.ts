@@ -256,12 +256,17 @@ export const hooks = sqliteTable("hooks", {
 export const cronJobs = sqliteTable("cron_jobs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  schedule: text("schedule").notNull(), // cron expression
+  schedule: text("schedule").notNull(), // "every 5m", "every 1h", "every 24h"
+  type: text("type").notNull().default("custom"), // memory_consolidation, health_check, cleanup_old_logs, custom_script
+  handler: text("handler"), // handler function name
   agentId: integer("agent_id"),
-  command: text("command").notNull(),
-  status: text("status", { enum: ["active", "paused", "error"] }).notNull().default("active"),
-  lastRun: text("last_run"),
-  nextRun: text("next_run"),
+  command: text("command").notNull().default(""),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  config: text("config", { mode: "json" }).$type<Record<string, unknown>>().default({}),
+  lastRunAt: text("last_run_at"),
+  lastStatus: text("last_status"), // success, error
+  lastOutput: text("last_output"),
+  nextRunAt: text("next_run_at").notNull().$defaultFn(() => new Date().toISOString()),
   runCount: integer("run_count").notNull().default(0),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });

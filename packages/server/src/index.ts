@@ -20,6 +20,9 @@ import { systemRoutes } from "./routes/system";
 import { chatRoutes } from "./routes/chat";
 import { spawnRoutes } from "./routes/spawn";
 import { consolidationRoutes } from "./routes/consolidation";
+import { pipelineRoutes } from "./routes/pipeline";
+import { evolutionRoutes } from "./routes/evolution";
+import { startScheduler } from "./engine/scheduler";
 
 const app = new Hono();
 
@@ -49,8 +52,13 @@ app.route("/api", systemRoutes);
 app.route("/api", chatRoutes);
 app.route("/api", spawnRoutes);
 app.route("/api", consolidationRoutes);
+app.route("/api", pipelineRoutes);
+app.route("/api", evolutionRoutes);
 
 const port = Number(process.env.PORT ?? 3001);
+
+// Start the scheduler (checks for due jobs every 60s)
+startScheduler(60000);
 
 console.log(`🧠 HumanCore AI Server running on http://localhost:${port}`);
 

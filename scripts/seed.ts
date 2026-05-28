@@ -223,10 +223,10 @@ async function seed() {
 
   // ─── Cron Jobs ────────────────────────────────────────
   await db.insert(cronJobs).values([
-    { name: "Memory Consolidation", schedule: "0 3 * * *", agentId: luna.id, command: "memory.consolidate", status: "active", lastRun: new Date(now - 86400000).toISOString(), nextRun: new Date(now + 43200000).toISOString(), runCount: 14 },
-    { name: "Team Wellness Check", schedule: "0 9 * * 1-5", agentId: sage.id, command: "team.wellness_check", status: "active", lastRun: new Date(now - 172800000).toISOString(), nextRun: new Date(now + 86400000).toISOString(), runCount: 8 },
-    { name: "Usage Report", schedule: "0 0 * * 0", command: "system.usage_report", status: "active", lastRun: new Date(now - 604800000).toISOString(), nextRun: new Date(now + 259200000).toISOString(), runCount: 4 },
-    { name: "Backup Database", schedule: "0 2 * * *", command: "system.backup", status: "paused", runCount: 0 },
+    { name: "Memory Consolidation", schedule: "every 6h", type: "memory_consolidation", handler: "memory_consolidation", agentId: luna.id, command: "", isActive: true, config: { agentId: luna.id }, lastRunAt: new Date(now - 86400000).toISOString(), lastStatus: "success", nextRunAt: new Date(now + 43200000).toISOString(), runCount: 14 },
+    { name: "Health Check", schedule: "every 5m", type: "health_check", handler: "health_check", command: "", isActive: true, config: {}, lastRunAt: new Date(now - 300000).toISOString(), lastStatus: "success", nextRunAt: new Date(now + 300000).toISOString(), runCount: 288 },
+    { name: "Cleanup Old Logs", schedule: "every 24h", type: "cleanup_old_logs", handler: "cleanup_old_logs", command: "", isActive: true, config: {}, lastRunAt: new Date(now - 86400000).toISOString(), lastStatus: "success", nextRunAt: new Date(now + 86400000).toISOString(), runCount: 30 },
+    { name: "Team Status Report", schedule: "every 12h", type: "custom_script", handler: "custom_script", agentId: sage.id, command: "echo 'Team report generated'", isActive: false, config: { script: "echo 'Team wellness check'" }, nextRunAt: new Date(now + 43200000).toISOString(), runCount: 0 },
   ]);
   console.log("  ✓ Cron Jobs");
 
