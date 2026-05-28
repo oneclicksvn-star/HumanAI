@@ -76,6 +76,8 @@ agentsRoutes.delete("/agents/:id", async (c) => {
   return c.body(null, 204);
 });
 
+
+
 // ─── Agent Full Profile (aggregated view) ────────────────────────────────────
 
 agentsRoutes.get("/agents/:id/profile", async (c) => {

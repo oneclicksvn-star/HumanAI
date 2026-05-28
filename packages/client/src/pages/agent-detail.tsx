@@ -174,6 +174,9 @@ function OverviewTab({ agent, profile, editing, editForm, setEditForm, onSave, o
             <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2"><BookOpen size={14} /> Nhân vật & Identity</h3>
             {editing && <div className="flex gap-1"><button onClick={onSave} className="p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"><Check size={12} /></button><button onClick={onCancel} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200"><X size={12} /></button></div>}
           </div>
+          {/* Avatar */}
+          <AgentAvatar agent={agent} editing={editing} />
+
           {editing ? (
             <div className="space-y-3">
               <Field label="Name" value={editForm.name as string} onChange={v => setEditForm({ ...editForm, name: v })} />
@@ -857,4 +860,181 @@ function SkillsSection({ agentId, skills: initialSkills }: { agentId: number; sk
       </p>
     </div>
   );
+}
+
+// ─── Character Expression Component (hình nhân vật có cảm xúc) ───────────────
+
+const MOOD_EXPRESSIONS: Record<string, { eyes: string; mouth: string; blush: boolean; brows: string }> = {
+  positive: { eyes: "happy", mouth: "smile", blush: true, brows: "normal" },
+  neutral: { eyes: "normal", mouth: "neutral", blush: false, brows: "normal" },
+  focused: { eyes: "determined", mouth: "neutral", blush: false, brows: "focused" },
+  empathetic: { eyes: "soft", mouth: "gentle", blush: true, brows: "concerned" },
+  excited: { eyes: "sparkle", mouth: "grin", blush: true, brows: "raised" },
+  sad: { eyes: "sad", mouth: "frown", blush: false, brows: "sad" },
+  frustrated: { eyes: "annoyed", mouth: "tight", blush: false, brows: "angry" },
+  curious: { eyes: "wide", mouth: "o", blush: false, brows: "raised" },
+};
+
+const NATURE_COLORS: Record<string, { bg: string; accent: string; skin: string }> = {
+  analytical: { bg: "#e0f2fe", accent: "#3b82f6", skin: "#fef3c7" },
+  creative: { bg: "#fce7f3", accent: "#ec4899", skin: "#fef9c3" },
+  technical: { bg: "#e0e7ff", accent: "#6366f1", skin: "#ecfdf5" },
+  strategic: { bg: "#fef3c7", accent: "#f59e0b", skin: "#fff7ed" },
+  nurturing: { bg: "#dcfce7", accent: "#22c55e", skin: "#fef2f2" },
+  social: { bg: "#f3e8ff", accent: "#a855f7", skin: "#fdf4ff" },
+};
+
+function CharacterExpression({ mood, nature, size = 96 }: { mood: string; nature: string; size?: number }) {
+  const expr = MOOD_EXPRESSIONS[mood] ?? MOOD_EXPRESSIONS.neutral;
+  const colors = NATURE_COLORS[nature] ?? NATURE_COLORS.analytical;
+  const s = size;
+  const cx = s / 2;
+  const cy = s / 2;
+
+  const renderEyes = () => {
+    const eyeY = cy - s * 0.05;
+    const eyeSpacing = s * 0.14;
+    const eyeSize = s * 0.06;
+
+    switch (expr.eyes) {
+      case "happy":
+        return (<>
+          <path d={`M${cx - eyeSpacing - eyeSize},${eyeY} Q${cx - eyeSpacing},${eyeY - eyeSize * 1.5} ${cx - eyeSpacing + eyeSize},${eyeY}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.025} strokeLinecap="round" />
+          <path d={`M${cx + eyeSpacing - eyeSize},${eyeY} Q${cx + eyeSpacing},${eyeY - eyeSize * 1.5} ${cx + eyeSpacing + eyeSize},${eyeY}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.025} strokeLinecap="round" />
+        </>);
+      case "sparkle":
+        return (<>
+          <circle cx={cx - eyeSpacing} cy={eyeY} r={eyeSize} fill="#1e293b" />
+          <circle cx={cx + eyeSpacing} cy={eyeY} r={eyeSize} fill="#1e293b" />
+          <circle cx={cx - eyeSpacing + 2} cy={eyeY - 2} r={eyeSize * 0.35} fill="white" />
+          <circle cx={cx + eyeSpacing + 2} cy={eyeY - 2} r={eyeSize * 0.35} fill="white" />
+          <circle cx={cx - eyeSpacing - 1} cy={eyeY + 1} r={eyeSize * 0.2} fill="white" />
+          <circle cx={cx + eyeSpacing - 1} cy={eyeY + 1} r={eyeSize * 0.2} fill="white" />
+        </>);
+      case "sad":
+        return (<>
+          <path d={`M${cx - eyeSpacing - eyeSize},${eyeY - eyeSize * 0.5} Q${cx - eyeSpacing},${eyeY + eyeSize} ${cx - eyeSpacing + eyeSize},${eyeY - eyeSize * 0.5}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.025} strokeLinecap="round" />
+          <path d={`M${cx + eyeSpacing - eyeSize},${eyeY - eyeSize * 0.5} Q${cx + eyeSpacing},${eyeY + eyeSize} ${cx + eyeSpacing + eyeSize},${eyeY - eyeSize * 0.5}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.025} strokeLinecap="round" />
+        </>);
+      case "wide":
+        return (<>
+          <circle cx={cx - eyeSpacing} cy={eyeY} r={eyeSize * 1.2} fill="#1e293b" />
+          <circle cx={cx + eyeSpacing} cy={eyeY} r={eyeSize * 1.2} fill="#1e293b" />
+          <circle cx={cx - eyeSpacing + 1.5} cy={eyeY - 1.5} r={eyeSize * 0.4} fill="white" />
+          <circle cx={cx + eyeSpacing + 1.5} cy={eyeY - 1.5} r={eyeSize * 0.4} fill="white" />
+        </>);
+      case "determined":
+        return (<>
+          <circle cx={cx - eyeSpacing} cy={eyeY} r={eyeSize * 0.9} fill="#1e293b" />
+          <circle cx={cx + eyeSpacing} cy={eyeY} r={eyeSize * 0.9} fill="#1e293b" />
+          <rect x={cx - eyeSpacing - eyeSize * 1.2} y={eyeY - eyeSize * 1.8} width={eyeSize * 2.4} height={eyeSize * 0.8} fill={colors.bg} />
+          <rect x={cx + eyeSpacing - eyeSize * 1.2} y={eyeY - eyeSize * 1.8} width={eyeSize * 2.4} height={eyeSize * 0.8} fill={colors.bg} />
+        </>);
+      case "annoyed":
+        return (<>
+          <line x1={cx - eyeSpacing - eyeSize} y1={eyeY} x2={cx - eyeSpacing + eyeSize} y2={eyeY} stroke="#1e293b" strokeWidth={s * 0.03} strokeLinecap="round" />
+          <line x1={cx + eyeSpacing - eyeSize} y1={eyeY} x2={cx + eyeSpacing + eyeSize} y2={eyeY} stroke="#1e293b" strokeWidth={s * 0.03} strokeLinecap="round" />
+        </>);
+      case "soft":
+        return (<>
+          <ellipse cx={cx - eyeSpacing} cy={eyeY} rx={eyeSize * 0.8} ry={eyeSize * 0.6} fill="#1e293b" />
+          <ellipse cx={cx + eyeSpacing} cy={eyeY} rx={eyeSize * 0.8} ry={eyeSize * 0.6} fill="#1e293b" />
+        </>);
+      default:
+        return (<>
+          <circle cx={cx - eyeSpacing} cy={eyeY} r={eyeSize} fill="#1e293b" />
+          <circle cx={cx + eyeSpacing} cy={eyeY} r={eyeSize} fill="#1e293b" />
+        </>);
+    }
+  };
+
+  const renderMouth = () => {
+    const mouthY = cy + s * 0.12;
+    const mouthW = s * 0.12;
+
+    switch (expr.mouth) {
+      case "smile":
+        return <path d={`M${cx - mouthW},${mouthY} Q${cx},${mouthY + mouthW * 0.8} ${cx + mouthW},${mouthY}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.02} strokeLinecap="round" />;
+      case "grin":
+        return <path d={`M${cx - mouthW * 1.2},${mouthY} Q${cx},${mouthY + mouthW * 1.2} ${cx + mouthW * 1.2},${mouthY}`} fill="#1e293b" stroke="#1e293b" strokeWidth={s * 0.015} />;
+      case "frown":
+        return <path d={`M${cx - mouthW},${mouthY + mouthW * 0.4} Q${cx},${mouthY - mouthW * 0.3} ${cx + mouthW},${mouthY + mouthW * 0.4}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.02} strokeLinecap="round" />;
+      case "o":
+        return <ellipse cx={cx} cy={mouthY} rx={mouthW * 0.4} ry={mouthW * 0.5} fill="#1e293b" />;
+      case "tight":
+        return <line x1={cx - mouthW * 0.6} y1={mouthY} x2={cx + mouthW * 0.6} y2={mouthY} stroke="#1e293b" strokeWidth={s * 0.025} strokeLinecap="round" />;
+      case "gentle":
+        return <path d={`M${cx - mouthW * 0.7},${mouthY} Q${cx},${mouthY + mouthW * 0.5} ${cx + mouthW * 0.7},${mouthY}`} fill="none" stroke="#1e293b" strokeWidth={s * 0.018} strokeLinecap="round" />;
+      default:
+        return <line x1={cx - mouthW * 0.6} y1={mouthY} x2={cx + mouthW * 0.6} y2={mouthY} stroke="#1e293b" strokeWidth={s * 0.02} strokeLinecap="round" />;
+    }
+  };
+
+  const renderBrows = () => {
+    const browY = cy - s * 0.16;
+    const eyeSpacing = s * 0.14;
+    const browW = s * 0.08;
+
+    switch (expr.brows) {
+      case "raised":
+        return (<>
+          <path d={`M${cx - eyeSpacing - browW},${browY - 3} Q${cx - eyeSpacing},${browY - 6} ${cx - eyeSpacing + browW},${browY - 3}`} fill="none" stroke="#475569" strokeWidth={s * 0.02} strokeLinecap="round" />
+          <path d={`M${cx + eyeSpacing - browW},${browY - 3} Q${cx + eyeSpacing},${browY - 6} ${cx + eyeSpacing + browW},${browY - 3}`} fill="none" stroke="#475569" strokeWidth={s * 0.02} strokeLinecap="round" />
+        </>);
+      case "focused":
+        return (<>
+          <line x1={cx - eyeSpacing - browW} y1={browY} x2={cx - eyeSpacing + browW} y2={browY - 2} stroke="#475569" strokeWidth={s * 0.022} strokeLinecap="round" />
+          <line x1={cx + eyeSpacing - browW} y1={browY - 2} x2={cx + eyeSpacing + browW} y2={browY} stroke="#475569" strokeWidth={s * 0.022} strokeLinecap="round" />
+        </>);
+      case "concerned":
+        return (<>
+          <path d={`M${cx - eyeSpacing - browW},${browY - 2} Q${cx - eyeSpacing},${browY - 4} ${cx - eyeSpacing + browW},${browY}`} fill="none" stroke="#475569" strokeWidth={s * 0.02} strokeLinecap="round" />
+          <path d={`M${cx + eyeSpacing - browW},${browY} Q${cx + eyeSpacing},${browY - 4} ${cx + eyeSpacing + browW},${browY - 2}`} fill="none" stroke="#475569" strokeWidth={s * 0.02} strokeLinecap="round" />
+        </>);
+      case "sad":
+        return (<>
+          <path d={`M${cx - eyeSpacing - browW},${browY - 3} Q${cx - eyeSpacing},${browY} ${cx - eyeSpacing + browW},${browY + 2}`} fill="none" stroke="#475569" strokeWidth={s * 0.02} strokeLinecap="round" />
+          <path d={`M${cx + eyeSpacing - browW},${browY + 2} Q${cx + eyeSpacing},${browY} ${cx + eyeSpacing + browW},${browY - 3}`} fill="none" stroke="#475569" strokeWidth={s * 0.02} strokeLinecap="round" />
+        </>);
+      case "angry":
+        return (<>
+          <line x1={cx - eyeSpacing - browW} y1={browY - 3} x2={cx - eyeSpacing + browW} y2={browY + 2} stroke="#475569" strokeWidth={s * 0.025} strokeLinecap="round" />
+          <line x1={cx + eyeSpacing - browW} y1={browY + 2} x2={cx + eyeSpacing + browW} y2={browY - 3} stroke="#475569" strokeWidth={s * 0.025} strokeLinecap="round" />
+        </>);
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center mb-4">
+      <div className="relative">
+        <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
+          {/* Background circle */}
+          <circle cx={cx} cy={cy} r={s * 0.44} fill={colors.bg} />
+          {/* Face */}
+          <circle cx={cx} cy={cy} r={s * 0.32} fill={colors.skin} />
+          {/* Blush */}
+          {expr.blush && (<>
+            <circle cx={cx - s * 0.18} cy={cy + s * 0.06} r={s * 0.05} fill="#fda4af" opacity={0.4} />
+            <circle cx={cx + s * 0.18} cy={cy + s * 0.06} r={s * 0.05} fill="#fda4af" opacity={0.4} />
+          </>)}
+          {/* Eyes */}
+          {renderEyes()}
+          {/* Mouth */}
+          {renderMouth()}
+          {/* Eyebrows */}
+          {renderBrows()}
+          {/* Accent decoration (nature-specific) */}
+          <circle cx={cx + s * 0.28} cy={cy - s * 0.28} r={s * 0.04} fill={colors.accent} opacity={0.6} />
+          <circle cx={cx + s * 0.34} cy={cy - s * 0.2} r={s * 0.025} fill={colors.accent} opacity={0.4} />
+        </svg>
+      </div>
+      <span className="text-[10px] text-gray-400 mt-1 capitalize">{mood}</span>
+    </div>
+  );
+}
+
+function AgentAvatar({ agent, editing }: { agent: any; editing: boolean }) {
+  return <CharacterExpression mood={agent.mood ?? "neutral"} nature={agent.nature ?? "analytical"} size={100} />;
 }
