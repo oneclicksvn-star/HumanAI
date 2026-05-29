@@ -4,7 +4,7 @@ import { Construction } from "lucide-react";
 const PAGE_INFO: Record<string, { title: string; description: string }> = {
   "/company": { title: "Company", description: "Multi-agent company with departments, KPIs, and org chart." },
   "/channels": { title: "Channels", description: "WhatsApp, Telegram, Discord, Slack, Email, Webhooks — manage all message channels." },
-  "/skills": { title: "Skills", description: "Browse and manage agent skills — installed + skill store." },
+  "/skills": { title: "Kỹ năng", description: "Browse and manage agent skills — installed + skill store." },
   "/tools": { title: "Tools", description: "Built-in and custom tools available to agents: shell, web, file, code." },
   "/mcp-servers": { title: "MCP Servers", description: "Model Context Protocol servers — PostgreSQL, GitHub, Filesystem." },
   "/hooks": { title: "Hooks", description: "Event hooks for tool approval flow, message interception, agent lifecycle." },
@@ -15,8 +15,8 @@ const PAGE_INFO: Record<string, { title: string; description: string }> = {
   "/traces": { title: "Traces", description: "LLM call tracing — latency, tokens, cost per call." },
   "/logs": { title: "Logs", description: "Terminal-style log viewer with filters." },
   "/api-keys": { title: "API Keys", description: "Manage API keys for external access." },
-  "/security": { title: "Security", description: "DM pairing, sandbox, ethics audit logs." },
-  "/backup": { title: "Backup & Restore", description: "Backup database, import/export agent configs." },
+  "/security": { title: "Bảo mật", description: "DM pairing, sandbox, ethics audit logs." },
+  "/backup": { title: "Sao lưu & Khôi phục", description: "Backup database, import/export agent configs." },
   "/doctor": { title: "Doctor", description: "15+ health checks with auto-repair capabilities." },
   "/heartbeat": { title: "Heartbeat", description: "System heartbeat monitoring — uptime, response time, errors." },
 };

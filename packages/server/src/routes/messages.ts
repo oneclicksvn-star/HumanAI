@@ -31,3 +31,9 @@ messagesRoutes.post("/sessions/:sessionId/messages", async (c) => {
 
   return c.json(msg, 201);
 });
+
+messagesRoutes.delete("/messages/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  await db.delete(messages).where(eq(messages.id, id));
+  return c.body(null, 204);
+});

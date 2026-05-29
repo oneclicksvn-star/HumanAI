@@ -1,18 +1,33 @@
 import { Hono } from "hono";
 import { db } from "@humancore/db";
-import { memoryEntries, knowledgeNodes, knowledgeEdges, agentSkills, dreams } from "@humancore/db/schema";
-import { eq, desc, like } from "drizzle-orm";
+import { memoryEntries, knowledgeNodes, knowledgeEdges, agentSkills, dreams, consolidationJobs } from "@humancore/db/schema";
+import { eq, desc } from "drizzle-orm";
+import { calculateDecayedImportance } from "../engine/memory";
 
 export const memoryRoutes = new Hono();
 
-// Memory entries
+// Memory entries (with effective importance via Ebbinghaus decay)
 memoryRoutes.get("/memory", async (c) => {
   const agentId = c.req.query("agentId");
   const type = c.req.query("type");
   let query = db.select().from(memoryEntries).orderBy(desc(memoryEntries.createdAt)).$dynamic();
   if (agentId) query = query.where(eq(memoryEntries.agentId, Number(agentId)));
   const rows = await query;
-  return c.json(type ? rows.filter(r => r.type === type) : rows);
+  const filtered = type ? rows.filter(r => r.type === type) : rows;
+
+  // Attach effective importance with decay
+  const withDecay = filtered.map(m => ({
+    ...m,
+    effectiveImportance: Math.round(calculateDecayedImportance(
+      m.importance,
+      m.createdAt,
+      m.lastRecalledAt,
+      m.mood,
+      m.decayFactor
+    ) * 100) / 100,
+  }));
+
+  return c.json(withDecay);
 });
 
 memoryRoutes.post("/memory", async (c) => {
@@ -63,5 +78,14 @@ memoryRoutes.get("/dreams", async (c) => {
   const query = agentId
     ? db.select().from(dreams).where(eq(dreams.agentId, Number(agentId))).orderBy(desc(dreams.consolidatedAt))
     : db.select().from(dreams).orderBy(desc(dreams.consolidatedAt));
+  return c.json(await query);
+});
+
+// Consolidation jobs
+memoryRoutes.get("/consolidation-jobs", async (c) => {
+  const agentId = c.req.query("agentId");
+  const query = agentId
+    ? db.select().from(consolidationJobs).where(eq(consolidationJobs.agentId, Number(agentId))).orderBy(desc(consolidationJobs.createdAt))
+    : db.select().from(consolidationJobs).orderBy(desc(consolidationJobs.createdAt));
   return c.json(await query);
 });

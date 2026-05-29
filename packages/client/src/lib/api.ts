@@ -1,6 +1,6 @@
 const BASE = "/api";
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+export async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
@@ -19,7 +19,10 @@ export interface Agent {
   nature: string | null;
   purpose: string | null;
   vibe: string | null;
-  status: "active" | "sleeping" | "archived";
+  description: string | null;
+  agentType: string;
+  isDefault: boolean;
+  status: "active" | "sleeping" | "archived" | "summoning";
   mood: string;
   moodLabel: string;
   level: number;
@@ -30,9 +33,78 @@ export interface Agent {
   model: string | null;
   providerId: string | null;
   temperature: number | null;
+  maxTokens: number | null;
+  contextWindow: number;
+  maxToolIterations: number;
+  systemPrompt: string | null;
+  thinkingLevel: string;
+  selfEvolve: boolean;
+  skillEvolve: boolean;
+  toolsConfig: { allowList?: string[] | null; denyList?: string[] | null; requireApproval?: string[] | null; toolCallPrefix?: string } | null;
+  subagentsConfig: { maxConcurrent?: number; maxSpawnDepth?: number; maxChildrenPerAgent?: number; archiveAfterMinutes?: number; model?: string } | null;
+  memoryConfig: { autoExtract?: boolean; maxMemories?: number; consolidationInterval?: string; importanceThreshold?: number } | null;
+  sandboxConfig: { enabled?: boolean; timeoutMs?: number; maxOutputBytes?: number; allowNetwork?: boolean } | null;
+  workspace: string | null;
+  restrictToWorkspace: boolean;
+  budgetMonthlyCents: number | null;
   skills: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AgentProfile {
+  agent: Agent;
+  personality: Personality;
+  contextFiles: Array<{ id: number; fileName: string; isSystem: boolean; updatedAt: string }>;
+  commitments: AgentCommitment[];
+  skills: AgentSkill[];
+  stats: { memoriesCount: number; sessionsCount: number; activeSubAgents: number; totalSpawns: number; delegationsGiven: number; delegationsReceived: number; outboundLinks: number; inboundLinks: number };
+}
+
+export interface AgentContextFile {
+  id: number;
+  agentId: number;
+  fileName: string;
+  content: string;
+  isSystem: boolean;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface AgentCommitment {
+  id: number;
+  agentId: number;
+  type: string;
+  title: string;
+  description: string | null;
+  status: string;
+  dueAt: string | null;
+  targetUserId: string | null;
+  metadata: Record<string, unknown> | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface AgentMoodEntry {
+  id: number;
+  agentId: number;
+  mood: string;
+  moodLabel: string;
+  energy: number;
+  trigger: string | null;
+  sessionId: number | null;
+  createdAt: string;
+}
+
+export interface AgentConfig {
+  agentId: number;
+  llm: { model: string | null; providerId: string | null; temperature: number | null; maxTokens: number | null; contextWindow: number; maxToolIterations: number; thinkingLevel: string };
+  tools: { allowList?: string[] | null; denyList?: string[] | null; requireApproval?: string[] | null; toolCallPrefix?: string };
+  subagents: { maxConcurrent: number; maxSpawnDepth: number; maxChildrenPerAgent: number; archiveAfterMinutes: number; model: string };
+  memory: { autoExtract: boolean; maxMemories: number; consolidationInterval: string; importanceThreshold: number };
+  sandbox: { enabled: boolean; timeoutMs: number; maxOutputBytes: number; allowNetwork: boolean };
+  behavior: { selfEvolve: boolean; skillEvolve: boolean; systemPrompt: string | null };
+  budget: { monthlyCents: number | null };
 }
 
 export interface Personality {
@@ -142,11 +214,20 @@ export interface Dream {
 export interface Provider {
   id: number;
   name: string;
+  displayName: string | null;
   type: string;
   apiKey: string | null;
   baseUrl: string | null;
+  authType: string;
   models: string[];
+  defaultModel: string | null;
   isActive: boolean;
+  priority: number;
+  settings: Record<string, unknown>;
+  lastTestedAt: string | null;
+  lastTestStatus: string | null;
+  cachedModels: Array<{ id: string; name: string; contextWindow?: number; maxTokens?: number; reasoning?: boolean; vision?: boolean }> | null;
+  modelsCachedAt: string | null;
 }
 
 export interface KnowledgeGraph {
@@ -169,11 +250,26 @@ export const api = {
   // Agents
   listAgents: () => request<Agent[]>("/agents"),
   getAgent: (id: number) => request<Agent>(`/agents/${id}`),
-  createAgent: (data: Partial<Agent>) => request<Agent>("/agents", { method: "POST", body: JSON.stringify(data) }),
+  getAgentProfile: (id: number) => request<AgentProfile>(`/agents/${id}/profile`),
+  getAgentConfig: (id: number) => request<AgentConfig>(`/agents/${id}/config`),
+  updateAgentConfig: (id: number, data: Record<string, unknown>) => request<Agent>(`/agents/${id}/config`, { method: "PATCH", body: JSON.stringify(data) }),
+  createAgent: (data: Record<string, unknown>) => request<Agent>("/agents", { method: "POST", body: JSON.stringify(data) }),
   updateAgent: (id: number, data: Partial<Agent>) => request<Agent>(`/agents/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   deleteAgent: (id: number) => request<void>(`/agents/${id}`, { method: "DELETE" }),
   getPersonality: (id: number) => request<Personality>(`/agents/${id}/personality`),
   updatePersonality: (id: number, data: Partial<Personality>) => request<Personality>(`/agents/${id}/personality`, { method: "PATCH", body: JSON.stringify(data) }),
+  // Agent context files
+  listContextFiles: (agentId: number) => request<AgentContextFile[]>(`/agents/${agentId}/context-files`),
+  getContextFile: (agentId: number, fileName: string) => request<AgentContextFile>(`/agents/${agentId}/context-files/${fileName}`),
+  updateContextFile: (agentId: number, fileName: string, content: string) => request<AgentContextFile>(`/agents/${agentId}/context-files/${fileName}`, { method: "PUT", body: JSON.stringify({ content }) }),
+  // Agent commitments
+  listCommitments: (agentId: number) => request<AgentCommitment[]>(`/agents/${agentId}/commitments`),
+  createCommitment: (agentId: number, data: Record<string, unknown>) => request<AgentCommitment>(`/agents/${agentId}/commitments`, { method: "POST", body: JSON.stringify(data) }),
+  updateCommitment: (agentId: number, commitmentId: number, data: Record<string, unknown>) => request<AgentCommitment>(`/agents/${agentId}/commitments/${commitmentId}`, { method: "PATCH", body: JSON.stringify(data) }),
+  // Agent mood history
+  listMoodHistory: (agentId: number) => request<AgentMoodEntry[]>(`/agents/${agentId}/mood-history`),
+  // Agent XP
+  awardXp: (agentId: number, xp: number, reason: string) => request<{ agentId: number; xpGained: number; xp: number; level: number; xpNext: number; lifecycle: string; leveledUp: boolean }>(`/agents/${agentId}/xp`, { method: "POST", body: JSON.stringify({ xp, reason }) }),
 
   // Sessions
   listSessions: () => request<Session[]>("/sessions"),
@@ -228,4 +324,128 @@ export const api = {
 
   // Health
   health: () => request<{ status: string }>("/health"),
+
+  // Channels
+  listChannels: () => request<any[]>("/channels"),
+  createChannel: (data: any) => request<any>("/channels", { method: "POST", body: JSON.stringify(data) }),
+  updateChannel: (id: number, data: any) => request<any>(`/channels/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteChannel: (id: number) => request<void>(`/channels/${id}`, { method: "DELETE" }),
+
+  // Tools
+  listTools: () => request<any[]>("/tools"),
+  createTool: (data: any) => request<any>("/tools", { method: "POST", body: JSON.stringify(data) }),
+  updateTool: (id: number, data: any) => request<any>(`/tools/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteTool: (id: number) => request<void>(`/tools/${id}`, { method: "DELETE" }),
+
+  // MCP Servers
+  listMcpServers: () => request<any[]>("/mcp-servers"),
+  createMcpServer: (data: any) => request<any>("/mcp-servers", { method: "POST", body: JSON.stringify(data) }),
+  updateMcpServer: (id: number, data: any) => request<any>(`/mcp-servers/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteMcpServer: (id: number) => request<void>(`/mcp-servers/${id}`, { method: "DELETE" }),
+
+  // Hooks
+  listHooks: () => request<any[]>("/hooks"),
+  createHook: (data: any) => request<any>("/hooks", { method: "POST", body: JSON.stringify(data) }),
+  updateHook: (id: number, data: any) => request<any>(`/hooks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteHook: (id: number) => request<void>(`/hooks/${id}`, { method: "DELETE" }),
+
+  // Cron Jobs
+  listCronJobs: () => request<any[]>("/cron-jobs"),
+  createCronJob: (data: any) => request<any>("/cron-jobs", { method: "POST", body: JSON.stringify(data) }),
+  updateCronJob: (id: number, data: any) => request<any>(`/cron-jobs/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteCronJob: (id: number) => request<void>(`/cron-jobs/${id}`, { method: "DELETE" }),
+
+  // Vault
+  listVaultDocs: () => request<any[]>("/vault"),
+  getVaultDoc: (id: number) => request<any>(`/vault/${id}`),
+  createVaultDoc: (data: any) => request<any>("/vault", { method: "POST", body: JSON.stringify(data) }),
+  updateVaultDoc: (id: number, data: any) => request<any>(`/vault/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteVaultDoc: (id: number) => request<void>(`/vault/${id}`, { method: "DELETE" }),
+
+  // System
+  listApiKeys: () => request<any[]>("/api-keys"),
+  createApiKey: (data: any) => request<any>("/api-keys", { method: "POST", body: JSON.stringify(data) }),
+  deleteApiKey: (id: number) => request<void>(`/api-keys/${id}`, { method: "DELETE" }),
+  getUsage: () => request<any[]>("/usage"),
+  getUsageSummary: () => request<any>("/usage/summary"),
+  getTraces: () => request<any[]>("/traces"),
+  getLogs: (level?: string) => request<any[]>(`/logs${level ? `?level=${level}` : ""}`),
+  getActivity: () => request<any[]>("/activity"),
+  getBackups: () => request<any[]>("/backups"),
+  createBackup: (data: any) => request<any>("/backups", { method: "POST", body: JSON.stringify(data) }),
+  getDoctor: () => request<any>("/doctor"),
+  getHeartbeat: () => request<any>("/heartbeat"),
+
+  // Chat Engine
+  getChatProvider: () => request<{ provider: string; model: string; name?: string; configured: boolean }>("/chat/provider"),
+  sendChatMessage: (sessionId: number, content: string) => request<{ message: Message; userMessage: Message; provider: string }>(`/chat/${sessionId}/send`, { method: "POST", body: JSON.stringify({ content }) }),
+
+  streamChatMessage: async (sessionId: number, content: string, onChunk: (chunk: string) => void, onDone: (data: { message: Message; usage?: { inputTokens: number; outputTokens: number; latencyMs: number }; provider: string }) => void, onError: (error: string) => void, options?: { providerId?: string | null; model?: string | null }) => {
+    const payload: Record<string, unknown> = { content };
+    if (options?.providerId) payload.providerId = options.providerId;
+    if (options?.model) payload.model = options.model;
+    const res = await fetch(`${BASE}/chat/${sessionId}/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      onError(data.error ?? `HTTP ${res.status}`);
+      return;
+    }
+
+    const contentType = res.headers.get("Content-Type") ?? "";
+    if (contentType.includes("application/json")) {
+      const data = await res.json();
+      if (data.error) { onError(data.error); return; }
+      onChunk(data.message.content);
+      onDone(data);
+      return;
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) { onError("No stream reader"); return; }
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.type === "chunk") onChunk(data.content);
+          else if (data.type === "done") onDone(data);
+          else if (data.type === "error") onError(data.error);
+        } catch {}
+      }
+    }
+  },
+
+  // Sub-Agent Spawns
+  getAgentSpawns: (agentId: number) => request<any[]>(`/agents/${agentId}/spawns`),
+  spawnSubAgent: (agentId: number, data: { purpose: string; mode?: string; name?: string; emoji?: string; sessionId?: number }) =>
+    request<any>(`/agents/${agentId}/spawn`, { method: "POST", body: JSON.stringify(data) }),
+  terminateSpawn: (spawnId: number) => request<any>(`/spawns/${spawnId}/terminate`, { method: "POST" }),
+  completeSpawn: (spawnId: number, result: string) => request<any>(`/spawns/${spawnId}/complete`, { method: "POST", body: JSON.stringify({ result }) }),
+
+  // Delegations
+  listDelegations: (agentId?: number) => request<any[]>(`/delegations${agentId ? `?agentId=${agentId}` : ""}`),
+  createDelegation: (data: { fromAgentId: number; toAgentId: number; taskDescription: string; context?: string; priority?: string; sessionId?: number; autoExecute?: boolean }) =>
+    request<any>("/delegations", { method: "POST", body: JSON.stringify(data) }),
+  executeDelegation: (id: number) => request<any>(`/delegations/${id}/execute`, { method: "POST" }),
+
+  // Agent Links
+  listAgentLinks: (agentId?: number) => request<any[]>(`/agent-links${agentId ? `?agentId=${agentId}` : ""}`),
+
+  // Find best agent
+  findBestAgent: (taskDescription: string, excludeAgentId?: number) =>
+    request<any>("/agents/find-best", { method: "POST", body: JSON.stringify({ taskDescription, excludeAgentId }) }),
 };

@@ -15,49 +15,49 @@ interface NavItem { href: string; label: string; icon: ElementType; badge?: stri
 interface NavSection { section: string; items: NavItem[]; collapsible?: boolean }
 
 const NAV: NavSection[] = [
-  { section: "CORE", items: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/chat", label: "Chat", icon: MessageSquare, badge: "3" },
-    { href: "/agents", label: "Agents", icon: Users },
-    { href: "/teams", label: "Teams", icon: GitBranch },
-    { href: "/company", label: "Company", icon: Building2 },
-    { href: "/sessions", label: "Sessions", icon: History },
+  { section: "CHÍNH", items: [
+    { href: "/dashboard", label: "Tổng quan", icon: LayoutDashboard },
+    { href: "/chat", label: "Trò chuyện", icon: MessageSquare, badge: "3" },
+    { href: "/agents", label: "Nhân vật AI", icon: Users },
+    { href: "/teams", label: "Nhóm", icon: GitBranch },
+    { href: "/company", label: "Công ty", icon: Building2 },
+    { href: "/sessions", label: "Phiên làm việc", icon: History },
   ]},
-  { section: "CONNECTIVITY", collapsible: true, items: [
-    { href: "/channels", label: "Channels", icon: Radio },
+  { section: "KẾT NỐI", collapsible: true, items: [
+    { href: "/channels", label: "Kênh", icon: Radio },
   ]},
-  { section: "CAPABILITIES", collapsible: true, items: [
-    { href: "/skills", label: "Skills", icon: Zap },
-    { href: "/tools", label: "Tools", icon: Wrench },
+  { section: "KHẢ NĂNG", collapsible: true, items: [
+    { href: "/skills", label: "Kỹ năng", icon: Zap },
+    { href: "/tools", label: "Công cụ", icon: Wrench },
     { href: "/mcp-servers", label: "MCP Servers", icon: Server },
     { href: "/hooks", label: "Hooks", icon: Link2 },
-    { href: "/cron-jobs", label: "Cron Jobs", icon: Clock },
+    { href: "/cron-jobs", label: "Tác vụ định kỳ", icon: Clock },
   ]},
-  { section: "DATA", collapsible: true, items: [
-    { href: "/memory", label: "Memory", icon: Brain },
-    { href: "/vault", label: "Vault", icon: FolderOpen },
+  { section: "DỮ LIỆU", collapsible: true, items: [
+    { href: "/memory", label: "Bộ nhớ", icon: Brain },
+    { href: "/vault", label: "Kho lưu trữ", icon: FolderOpen },
   ]},
-  { section: "MONITORING", collapsible: true, items: [
-    { href: "/activity", label: "Activity", icon: Activity },
-    { href: "/usage", label: "Usage", icon: BarChart2 },
+  { section: "GIÁM SÁT", collapsible: true, items: [
+    { href: "/activity", label: "Hoạt động", icon: Activity },
+    { href: "/usage", label: "Sử dụng", icon: BarChart2 },
     { href: "/traces", label: "Traces", icon: GitMerge },
-    { href: "/logs", label: "Logs", icon: Terminal },
+    { href: "/logs", label: "Nhật ký", icon: Terminal },
   ]},
-  { section: "SYSTEM", collapsible: true, items: [
+  { section: "HỆ THỐNG", collapsible: true, items: [
     { href: "/providers", label: "Providers", icon: Settings2 },
     { href: "/api-keys", label: "API Keys", icon: Key },
-    { href: "/security", label: "Security", icon: Shield },
-    { href: "/backup", label: "Backup", icon: HardDrive },
+    { href: "/security", label: "Bảo mật", icon: Shield },
+    { href: "/backup", label: "Sao lưu", icon: HardDrive },
   ]},
-  { section: "HEALTH", collapsible: true, items: [
-    { href: "/doctor", label: "Doctor", icon: Stethoscope },
-    { href: "/heartbeat", label: "Heartbeat", icon: Heart },
+  { section: "SỨC KHỎE", collapsible: true, items: [
+    { href: "/doctor", label: "Chẩn đoán", icon: Stethoscope },
+    { href: "/heartbeat", label: "Nhịp tim", icon: Heart },
   ]},
 ];
 
 export function Sidebar() {
   const [location] = useLocation();
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set(["CONNECTIVITY", "HEALTH"]));
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set(["KẾT NỐI", "SỨC KHỎE"]));
 
   const toggle = (s: string) => setCollapsed(prev => {
     const next = new Set(prev);
@@ -76,7 +76,7 @@ export function Sidebar() {
           </div>
           <div>
             <p className="text-sm font-bold text-gray-900">HumanCore</p>
-            <p className="text-[10px] text-gray-400">AI Platform</p>
+            <p className="text-[10px] text-gray-400">Nền tảng AI</p>
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@ export function Sidebar() {
       <div className="px-4 pt-3 pb-1">
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 cursor-pointer hover:border-gray-200 transition-colors">
           <Search size={12} className="text-gray-400" />
-          <span className="text-xs text-gray-400">Search…</span>
+          <span className="text-xs text-gray-400">Tìm kiếm…</span>
           <span className="ml-auto text-[9px] text-gray-300 font-semibold">⌘K</span>
         </div>
       </div>
@@ -123,22 +123,22 @@ export function Sidebar() {
       </nav>
 
       <div className="mx-3 mb-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-3.5 text-white flex-shrink-0">
-        <p className="text-[11px] font-bold mb-0.5">Upgrade to Pro</p>
-        <p className="text-[9px] opacity-75 mb-2.5">Unlock unlimited agents and advanced memory.</p>
-        <button className="w-full bg-white/20 hover:bg-white/30 text-[10px] font-bold py-1.5 rounded-lg transition-colors">Upgrade →</button>
+        <p className="text-[11px] font-bold mb-0.5">Nâng cấp Pro</p>
+        <p className="text-[9px] opacity-75 mb-2.5">Mở khóa agent không giới hạn và bộ nhớ nâng cao.</p>
+        <button className="w-full bg-white/20 hover:bg-white/30 text-[10px] font-bold py-1.5 rounded-lg transition-colors">Nâng cấp →</button>
       </div>
 
       <div className="px-3 pb-3 space-y-0.5 border-t border-gray-50 pt-2 flex-shrink-0">
         <Link href="/settings">
           <div className={cn("flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs cursor-pointer transition-all", isActive("/settings") ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-gray-500 hover:bg-gray-50")}>
-            <Settings size={15} /><span>Settings</span>
+            <Settings size={15} /><span>Cài đặt</span>
           </div>
         </Link>
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-50 cursor-pointer">
-          <HelpCircle size={15} /><span>Help & Info</span>
+          <HelpCircle size={15} /><span>Trợ giúp</span>
         </div>
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-50 cursor-pointer">
-          <LogOut size={15} /><span>Log Out</span>
+          <LogOut size={15} /><span>Đăng xuất</span>
         </div>
       </div>
     </aside>
